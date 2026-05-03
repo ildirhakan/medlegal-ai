@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedLegal-AI - Clinical Negligence Triage</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0D1B2E; color: #F1F5F9; font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0D1B2E; }
+    ::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 2px; }
+    
+    .app { display: flex; height: 100vh; }
+    .sidebar { width: 240px; background: #142236; border-right: 1px solid #1E3A5F; padding: 0; display: flex; flex-direction: column; }
+    .sidebar-content { flex: 1; overflow-y: auto; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    
+    .logo { padding: 24px 20px; border-bottom: 1px solid #1E3A5F; }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-text span { color: #3B82F6; }
+    .logo-sub { font-size: 9px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+    
+    .nav-section { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: #64748B; padding: 12px 10px 6px; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 0 10px 2px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #94A3B8; border: 1px solid transparent; transition: all 0.15s; }
+    .nav-item:hover { background: #1C3050; color: #F1F5F9; }
+    .nav-item.active { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border-color: rgba(59, 130, 246, 0.2); }
+    .nav-badge { margin-left: auto; background: #2B6CB0; color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-family: 'DM Mono', monospace; }
+    
+    .sidebar-user { padding: 16px; border-top: 1px solid #1E3A5F; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2B6CB0, #0D9488); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; }
+    .user-name { font-size: 12px; font-weight: 500; margin-top: 6px; }
+    .user-role { font-size: 10px; color: #64748B; font-family: 'DM Mono', monospace; margin-top: 2px; }
+    
+    .topbar { padding: 20px 28px; border-bottom: 1px solid #1E3A5F; background: #142236; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .topbar-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .topbar-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; font-family: 'DM Mono', monospace; }
+    
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+    
+    .card { background: #142236; border: 1px solid #1E3A5F; border-radius: 10px; padding: 20px; margin-bottom: 14px; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 10px; padding: 18px; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #3B82F6; }
+    .stat-card.amber::before { background: #D97706; }
+    .stat-card.green::before { background: #059669; }
+    .stat-card.teal::before { background: #0D9488; }
+    .stat-label { font-size: 10px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+    
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+    .btn-primary { background: #2B6CB0; color: white; }
+    .btn-primary:hover { background: #2563EB; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: #94A3B8; border: 1px solid #1E3A5F; }
+    .btn-ghost:hover { background: #1C3050; color: #F1F5F9; }
+    .btn-teal { background: #0D9488; color: white; }
+    .btn-teal:hover { background: #0F766E; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 11px; color: #94A3B8; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+    .form-input, .form-select, .form-textarea { width: 100%; background: #0D1B2E; border: 1px solid #1E3A5F; padding: 9px 12px; color: #F1F5F9; font-size: 13px; border-radius: 6px; font-family: 'DM Sans', sans-serif; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #3B82F6; }
+    .form-textarea { min-height: 90px; resize: vertical; }
+    
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 0; border-bottom: 1px solid #1E3A5F; font-size: 10px; text-transform: uppercase; color: #64748B; font-family: 'DM Mono', monospace; }
+    td { padding: 12px 0; border-bottom: 1px solid rgba(30, 58, 95, 0.5); font-size: 13px; }
+    
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; }
+    .badge-blue { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+    .badge-green { background: rgba(5, 150, 105, 0.15); color: #34D399; }
+    .badge-amber { background: rgba(217, 119, 6, 0.15); color: #FCD34D; }
+    .badge-red { background: rgba(220, 38, 38, 0.15); color: #F87171; }
+    .badge-teal { background: rgba(13, 148, 136, 0.15); color: #2DD4BF; }
+    
+    .upload-zone { border: 2px dashed #1E3A5F; border-radius: 10px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .upload-zone:hover { border-color: #3B82F6; background: rgba(59, 130, 246, 0.1); }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+    
+    .empty { text-align: center; padding: 48px 24px; color: #94A3B8; }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+    
+    .pipeline-step { display: flex; gap: 14px; padding: 14px 0; }
+    .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 12px; border: 2px solid; flex-shrink: 0; }
+    .step-circle.done { background: rgba(5, 150, 105, 0.15); border-color: #059669; color: #34D399; }
+    .step-circle.active { background: rgba(59, 130, 246, 0.15); border-color: #3B82F6; color: #3B82F6; }
+    .step-circle.pending { border-color: #1E3A5F; color: #64748B; }
+    
+    .progress-bar { height: 4px; background: #1E3A5F; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #0D9488); }
+    
+    .file-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0D1B2E; border-radius: 6px; margin-bottom: 8px; border: 1px solid #1E3A5F; }
+    .file-icon { width: 32px; height: 32px; background: rgba(220, 38, 38, 0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const MOCK_CASES = [
+      { id: 1, ref: 'MAI-2026-0042', firm: 'Harrison & Cole LLP', type: 'Surgical Negligence', date: '2026-05-03', score: 61, consistency: 78, status: 'pending_review', recommendation: 'Proceed to Expert Report' },
+      { id: 2, ref: 'MAI-2026-0041', firm: 'Brightwell Solicitors', type: 'Medication Error', date: '2026-05-02', score: 82, consistency: 91, status: 'approved', recommendation: 'Approved' },
+      { id: 3, ref: 'MAI-2026-0040', firm: 'Meridian Legal', type: 'Delayed Diagnosis', date: '2026-05-01', score: 24, consistency: 85, status: 'rejected', recommendation: 'Do Not Pursue' },
+      { id: 4, ref: 'MAI-2026-0039', firm: 'Carter & Partners', type: 'Birth Injury', date: '2026-04-30', score: 74, consistency: 88, status: 'approved', recommendation: 'Approved' },
+    ];
+
+    function App() {
+      const [page, setPage] = useState('dashboard');
+      const [cases, setCases] = useState(MOCK_CASES);
+      const [selectedCase, setSelectedCase] = useState(null);
+      const [caseForm, setCaseForm] = useState({ type: '', summary: '', files: [] });
+      const [uploadStep, setUploadStep] = useState(0);
+
+      const StatusBadge = ({ status }) => {
+        const map = {
+          approved: ['badge-green', '✓ Approved'],
+          pending_review: ['badge-amber', '● Pending Review'],
+          rejected: ['badge-red', '✕ Rejected'],
+        };
+        const [cls, label] = map[status] || ['badge-blue', status];
+        return <span className={`badge ${cls}`}>{label}</span>;
+      };
+
+      const handleUploadStart = () => {
+        if (!caseForm.type || caseForm.files.length === 0) return;
+        setPage('processing');
+        setUploadStep(0);
+        
+        const steps = [1, 2, 3, 4, 5];
+        steps.forEach((s, i) => {
+          setTimeout(() => {
+            setUploadStep(s);
+            if (s === 5) {
+              setTimeout(() => {
+                const newCase = {
+                  id: cases.length + 1,
+                  ref: `MAI-2026-${String(cases.length + 50).padStart(4, '0')}`,
+                  firm: 'Your Firm',
+                  type: caseForm.type,
+                  date: new Date().toISOString().split('T')[0],
+                  score: Math.floor(Math.random() * 40 + 40),
+                  consistency: Math.floor(Math.random() * 30 + 65),
+                  status: 'pending_review',
+                  recommendation: 'Pending expert review'
+                };
+                setCases([newCase, ...cases]);
+                setCaseForm({ type: '', summary: '', files: [] });
+                setPage('cases');
+              }, 1000);
+            }
+          }, i * 1200);
+        });
+      };
+
+      const pipelineSteps = [
+        'Secure Upload',
+        'PII Anonymisation',
+        'Multi-LLM Analysis',
+        'Consistency Scoring',
+        'Expert Review'
+      ];
+
+      return (
+        <div className="app">
+          {/* Sidebar */}
+          <div className="sidebar">
+            <div className="sidebar-content">
+              <div className="logo">
+                <div className="logo-text">MedLegal<span>-AI</span></div>
+                <div className="logo-sub">Triage Platform</div>
+              </div>
+
+              <div style={{ paddingTop: 12 }}>
+                <div className="nav-section">Main</div>
+                <div className={`nav-item ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
+                  📊 Dashboard
+                </div>
+                <div className={`nav-item ${page === 'cases' ? 'active' : ''}`} onClick={() => setPage('cases')}>
+                  📋 Cases
+                  <span className="nav-badge">{cases.length}</span>
+                </div>
+                <div className={`nav-item ${page === 'upload' ? 'active' : ''}`} onClick={() => setPage('upload')}>
+                  ↑ New Upload
+                </div>
+
+                <div className="nav-section" style={{ marginTop: 12 }}>Review</div>
+                <div className={`nav-item ${page === 'review' ? 'active' : ''}`} onClick={() => setPage('review')}>
+                  ⚖ Expert Review
+                  <span className="nav-badge">{cases.filter(c => c.status === 'pending_review').length}</span>
+                </div>
+
+                <div className="nav-section" style={{ marginTop: 12 }}>Config</div>
+                <div className={`nav-item ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
+                  ⚙ Settings
+                </div>
+              </div>
+            </div>
+
+            <div className="sidebar-user">
+              <div className="user-avatar">HY</div>
+              <div className="user-name">Dr. H. Yılmaz</div>
+              <div className="user-role">MD · LLB · Forensic Sci.</div>
+            </div>
+          </div>
+
+          {/* Main */}
+          <div className="main">
+            <div className="topbar">
+              <div>
+                <div className="topbar-title">
+                  {page === 'dashboard' && 'Dashboard'}
+                  {page === 'cases' && 'Case Management'}
+                  {page === 'upload' && 'New Case Upload'}
+                  {page === 'processing' && 'Processing Case'}
+                  {page === 'review' && 'Expert Review Panel'}
+                  {page === 'report' && selectedCase?.ref}
+                  {page === 'settings' && 'Settings'}
+                </div>
+                <div className="topbar-sub">
+                  {page === 'dashboard' && 'Overview of platform activity'}
+                  {page === 'cases' && `${cases.length} total cases`}
+                  {page === 'upload' && 'Submit medical records for analysis'}
+                  {page === 'processing' && 'Analysing case...'}
+                  {page === 'review' && `${cases.filter(c => c.status === 'pending_review').length} reports awaiting sign-off`}
+                  {page === 'report' && selectedCase?.firm}
+                  {page === 'settings' && 'API keys, configuration'}
+                </div>
+              </div>
+            </div>
+
+            <div className="content">
+              {/* Dashboard */}
+              {page === 'dashboard' && (
+                <>
+                  <div className="stats-grid">
+                    <div className="stat-card">
+                      <div className="stat-label">Total Cases</div>
+                      <div className="stat-value">{cases.length}</div>
+                    </div>
+                    <div className="stat-card amber">
+                      <div className="stat-label">Pending Review</div>
+                      <div className="stat-value">{cases.filter(c => c.status === 'pending_review').length}</div>
+                    </div>
+                    <div className="stat-card green">
+                      <div className="stat-label">Approved</div>
+                      <div className="stat-value">{cases.filter(c => c.status === 'approved').length}</div>
+                    </div>
+                    <div className="stat-card teal">
+                      <div className="stat-label">Avg Score</div>
+                      <div className="stat-value">
+                        {cases.length > 0 ? Math.round(cases.reduce((s, c) => s + c.score, 0) / cases.length) : '—'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid-3">
+                    <div className="card">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <div className="card-title" style={{ marginBottom: 0 }}>Recent Cases</div>
+                        <button className="btn btn-primary btn-sm" onClick={() => setPage('upload')}>+ New</button>
+                      </div>
+                      <table>
+                        <thead>
+                          <tr><th>Ref</th><th>Type</th><th>Score</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                          {cases.slice(0, 5).map(c => (
+                            <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => { setSelectedCase(c); setPage('report'); }}>
+                              <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#3B82F6' }}>{c.ref}</td>
+                              <td style={{ fontSize: 12, color: '#94A3B8' }}>{c.type}</td>
+                              <td style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: c.score >= 60 ? '#0D9488' : '#D97706' }}>{c.score}</td>
+                              <td><StatusBadge status={c.status} /></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <div className="card">
+                        <div className="card-title" style={{ marginBottom: 12 }}>Quick Actions</div>
+                        <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }} onClick={() => setPage('upload')}>
+                          ↑ New Case Upload
+                        </button>
+                        <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setPage('review')}>
+                          ⚖ Expert Review {cases.filter(c => c.status === 'pending_review').length > 0 && `(${cases.filter(c => c.status === 'pending_review').length})`}
+                        </button>
+                      </div>
+
+                      <div className="card">
+                        <div className="card-title" style={{ marginBottom: 12 }}>Platform Status</div>
+                        {[
+                          { name: 'Anonymisation Engine', ok: true },
+                          { name: 'AI Pipeline (Demo)', ok: true },
+                          { name: 'GPT-4 API', ok: false },
+                          { name: 'Gemini API', ok: false },
+                          { name: 'Claude API', ok: false },
+                          { name: 'DeepSeek API', ok: false },
+                        ].map((s, i) => (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid rgba(30,58,95,0.4)', fontSize: 12 }}>
+                            <span style={{ color: '#94A3B8' }}>{s.name}</span>
+                            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: s.ok ? '#059669' : '#D97706' }}>
+                              {s.ok ? '● Operational' : '○ Not Connected'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Cases */}
+              {page === 'cases' && (
+                <div className="card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div className="card-title" style={{ marginBottom: 0 }}>All Cases</div>
+                    <button className="btn btn-primary btn-sm" onClick={() => setPage('upload')}>+ New Case</button>
+                  </div>
+                  {cases.length === 0 ? (
+                    <div className="empty"><div className="empty-icon">📋</div><div>No cases yet.</div></div>
+                  ) : (
+                    <table>
+                      <thead>
+                        <tr><th>Reference</th><th>Firm</th><th>Type</th><th>Date</th><th>Score</th><th>Status</th><th></th></tr>
+                      </thead>
+                      <tbody>
+                        {cases.map(c => (
+                          <tr key={c.id}>
+                            <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#3B82F6' }}>{c.ref}</td>
+                            <td>{c.firm}</td>
+                            <td style={{ color: '#94A3B8', fontSize: 12 }}>{c.type}</td>
+                            <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#94A3B8' }}>{c.date}</td>
+                            <td style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: c.score >= 60 ? '#0D9488' : '#D97706' }}>{c.score}</td>
+                            <td><StatusBadge status={c.status} /></td>
+                            <td><button className="btn btn-ghost btn-sm" onClick={() => { setSelectedCase(c); setPage('report'); }}>View</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+
+              {/* Upload */}
+              {page === 'upload' && (
+                <div style={{ maxWidth: 720 }}>
+                  <div className="card">
+                    <div className="card-title">Case Information</div>
+                    <div className="grid-2">
+                      <div className="form-group">
+                        <label className="form-label">Law Firm</label>
+                        <input className="form-input" placeholder="e.g. Harrison & Cole LLP" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Case Type</label>
+                        <select className="form-select" value={caseForm.type} onChange={e => setCaseForm({...caseForm, type: e.target.value})}>
+                          <option value="">Select...</option>
+                          <option>Surgical Negligence</option>
+                          <option>Medication Error</option>
+                          <option>Delayed Diagnosis</option>
+                          <option>GP Negligence</option>
+                          <option>Birth Injury</option>
+                          <option>Anaesthesia Error</option>
+                          <option>Hospital Acquired Infection</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Brief Case Summary (Optional)</label>
+                      <textarea className="form-textarea" value={caseForm.summary} onChange={e => setCaseForm({...caseForm, summary: e.target.value})} placeholder="Brief description of the alleged negligence..." />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Medical Records</label>
+                      <div className="upload-zone" onClick={() => document.getElementById('file-input').click()}>
+                        <input id="file-input" type="file" multiple accept=".pdf,.jpg,.png" onChange={e => setCaseForm({...caseForm, files: Array.from(e.target.files)})} style={{ display: 'none' }} />
+                        <div style={{ fontSize: 14, marginBottom: 6 }}>📁 Drop files here or click</div>
+                        <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: "'DM Mono', monospace" }}>PDF, JPG, PNG · {caseForm.files.length} file(s) selected</div>
+                      </div>
+                    </div>
+
+                    {caseForm.files.length > 0 && (
+                      <div style={{ marginBottom: 14 }}>
+                        {caseForm.files.map((f, i) => (
+                          <div key={i} className="file-item">
+                            <div className="file-icon">📄</div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 12, fontWeight: 500 }}>{f.name}</div>
+                              <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: "'DM Mono', monospace" }}>{(f.size / 1024).toFixed(1)} KB</div>
+                            </div>
+                            <span className="badge badge-green">Ready</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ textAlign: 'right' }}>
+                      <button className="btn btn-primary" disabled={!caseForm.type || caseForm.files.length === 0} onClick={handleUploadStart}>
+                        Submit for Analysis →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Processing */}
+              {page === 'processing' && (
+                <div style={{ maxWidth: 720 }}>
+                  <div className="card">
+                    <div className="card-title">Processing Your Case</div>
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontFamily: "'DM Mono', monospace", color: '#94A3B8', marginBottom: 6 }}>
+                        <span>Progress</span>
+                        <span>{Math.round((uploadStep / 5) * 100)}%</span>
+                      </div>
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${(uploadStep / 5) * 100}%` }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      {pipelineSteps.map((label, i) => {
+                        const state = i < uploadStep ? 'done' : i === uploadStep ? 'active' : 'pending';
+                        return (
+                          <div key={i} className="pipeline-step">
+                            <div className={`step-circle ${state}`}>
+                              {state === 'done' ? '✓' : i + 1}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 500, marginTop: 6 }}>{label}</div>
+                              {state === 'active' && <div style={{ fontSize: 12, color: '#3B82F6', marginTop: 4 }}>Processing...</div>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Review */}
+              {page === 'review' && (
+                <div>
+                  {cases.filter(c => c.status === 'pending_review').length === 0 ? (
+                    <div className="card">
+                      <div className="empty">
+                        <div className="empty-icon">✓</div>
+                        <div>All clear - no pending reviews</div>
+                      </div>
+                    </div>
+                  ) : (
+                    cases.filter(c => c.status === 'pending_review').map(c => (
+                      <div key={c.id} className="card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#3B82F6', marginBottom: 4 }}>{c.ref}</div>
+                            <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{c.firm}</div>
+                            <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 10 }}>{c.type}</div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <StatusBadge status={c.status} />
+                              <span className="badge badge-blue">Score: {c.score}</span>
+                              <span className="badge badge-teal">Consistency: {c.consistency}%</span>
+                            </div>
+                          </div>
+                          <button className="btn btn-primary btn-sm" onClick={() => { setSelectedCase(c); setPage('report'); }}>
+                            Review Now →
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Report */}
+              {page === 'report' && selectedCase && (
+                <div>
+                  <div className="card">
+                    <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#64748B', marginBottom: 8 }}>REPORT REF · {selectedCase.ref} · CONFIDENTIAL</div>
+                    <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{selectedCase.type}</div>
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 12, color: '#94A3B8', fontFamily: "'DM Mono', monospace" }}>{selectedCase.firm} · {selectedCase.date}</div>
+                    </div>
+                    <StatusBadge status={selectedCase.status} />
+                  </div>
+
+                  <div className="grid-2">
+                    <div className="card">
+                      <div className="card-title">Risk / Success Score</div>
+                      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 48, fontWeight: 800, color: selectedCase.score >= 60 ? '#0D9488' : '#D97706', letterSpacing: -1 }}>
+                        {selectedCase.score}<span style={{ fontSize: 16, color: '#94A3B8' }}>/100</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>{selectedCase.recommendation}</div>
+                    </div>
+
+                    <div className="card">
+                      <div className="card-title">Consistency Score</div>
+                      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 48, fontWeight: 800, color: '#3B82F6', letterSpacing: -1 }}>
+                        {selectedCase.consistency}%
+                      </div>
+                      <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>Model agreement</div>
+                    </div>
+                  </div>
+
+                  {selectedCase.status === 'pending_review' && (
+                    <div className="card">
+                      <div className="card-title">Expert Review</div>
+                      <div className="form-group">
+                        <label className="form-label">Expert Notes</label>
+                        <textarea className="form-textarea" placeholder="Review findings..." style={{ minHeight: 120 }} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button className="btn btn-teal">✓ Approve & Sign Off</button>
+                        <button className="btn btn-ghost">✕ Reject</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Settings */}
+              {page === 'settings' && (
+                <div style={{ maxWidth: 640 }}>
+                  <div className="card">
+                    <div className="card-title">About This Demo</div>
+                    <p style={{ color: '#94A3B8', marginBottom: 12, lineHeight: 1.6 }}>
+                      This is a working prototype of MedLegal-AI. It demonstrates the full user interface and workflow for clinical negligence case triage.
+                    </p>
+                    <p style={{ color: '#94A3B8', lineHeight: 1.6 }}>
+                      To enable live AI analysis with GPT-4, Gemini, Claude, and DeepSeek, you'll need to:
+                    </p>
+                    <ol style={{ color: '#94A3B8', marginLeft: 20, marginTop: 12 }}>
+                      <li>Set up a Supabase account for database and authentication</li>
+                      <li>Add API keys from OpenAI, Google AI, Anthropic, and DeepSeek</li>
+                      <li>Deploy the application to Vercel</li>
+                    </ol>
+                  </div>
+
+                  <div className="card">
+                    <div className="card-title">API Configuration</div>
+                    <div style={{ background: '#0D1B2E', padding: 12, borderRadius: 6, fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#94A3B8', lineHeight: 1.8 }}>
+                      VITE_OPENAI_API_KEY=sk-...<br />
+                      VITE_GEMINI_API_KEY=AIza...<br />
+                      VITE_ANTHROPIC_API_KEY=sk-ant-...<br />
+                      VITE_DEEPSEEK_API_KEY=sk-...
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedLegal-AI - Law Firm Portal</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0D1B2E; color: #F1F5F9; font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0D1B2E; }
+    ::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 2px; }
+    
+    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0D1B2E; position: relative; overflow: hidden; }
+    .login-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(43,108,176,0.12) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(13,148,136,0.08) 0%, transparent 50%); }
+    .login-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 14px; padding: 40px; width: 380px; position: relative; z-index: 1; }
+    .login-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; text-align: center; margin-bottom: 4px; }
+    .login-title span { color: #3B82F6; }
+    .login-sub { font-size: 11px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; text-align: center; margin-bottom: 24px; }
+    .login-error { background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.3); color: #F87171; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; }
+    .login-hint { font-size: 11px; color: #64748B; text-align: center; margin-top: 16px; font-family: 'DM Mono', monospace; }
+    
+    .app { display: flex; height: 100vh; }
+    .sidebar { width: 240px; background: #142236; border-right: 1px solid #1E3A5F; padding: 0; display: flex; flex-direction: column; }
+    .sidebar-content { flex: 1; overflow-y: auto; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    
+    .logo { padding: 24px 20px; border-bottom: 1px solid #1E3A5F; }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-text span { color: #3B82F6; }
+    .logo-sub { font-size: 9px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+    
+    .nav-section { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: #64748B; padding: 12px 10px 6px; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 0 10px 2px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #94A3B8; border: 1px solid transparent; transition: all 0.15s; }
+    .nav-item:hover { background: #1C3050; color: #F1F5F9; }
+    .nav-item.active { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border-color: rgba(59, 130, 246, 0.2); }
+    .nav-badge { margin-left: auto; background: #2B6CB0; color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-family: 'DM Mono', monospace; }
+    
+    .sidebar-firm { padding: 16px; border-top: 1px solid #1E3A5F; }
+    .firm-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+    .firm-role { font-size: 10px; color: #64748B; font-family: 'DM Mono', monospace; }
+    .logout-btn { width: 100%; margin-top: 12px; padding: 8px; background: transparent; border: 1px solid #1E3A5F; color: #94A3B8; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.15s; }
+    .logout-btn:hover { background: #1C3050; color: #F1F5F9; }
+    
+    .topbar { padding: 20px 28px; border-bottom: 1px solid #1E3A5F; background: #142236; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .topbar-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .topbar-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; font-family: 'DM Mono', monospace; }
+    
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+    
+    .card { background: #142236; border: 1px solid #1E3A5F; border-radius: 10px; padding: 20px; margin-bottom: 14px; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 10px; padding: 18px; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #3B82F6; }
+    .stat-card.amber::before { background: #D97706; }
+    .stat-card.green::before { background: #059669; }
+    .stat-card.red::before { background: #DC2626; }
+    .stat-label { font-size: 10px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+    
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+    .btn-primary { background: #2B6CB0; color: white; }
+    .btn-primary:hover { background: #2563EB; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: #94A3B8; border: 1px solid #1E3A5F; }
+    .btn-ghost:hover { background: #1C3050; color: #F1F5F9; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 11px; color: #94A3B8; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+    .form-input, .form-select, .form-textarea { width: 100%; background: #0D1B2E; border: 1px solid #1E3A5F; padding: 9px 12px; color: #F1F5F9; font-size: 13px; border-radius: 6px; font-family: 'DM Sans', sans-serif; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #3B82F6; }
+    .form-textarea { min-height: 90px; resize: vertical; }
+    
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 0; border-bottom: 1px solid #1E3A5F; font-size: 10px; text-transform: uppercase; color: #64748B; font-family: 'DM Mono', monospace; }
+    td { padding: 12px 0; border-bottom: 1px solid rgba(30, 58, 95, 0.5); font-size: 13px; }
+    
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; }
+    .badge-blue { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+    .badge-green { background: rgba(5, 150, 105, 0.15); color: #34D399; }
+    .badge-amber { background: rgba(217, 119, 6, 0.15); color: #FCD34D; }
+    .badge-red { background: rgba(220, 38, 38, 0.15); color: #F87171; }
+    
+    .upload-zone { border: 2px dashed #1E3A5F; border-radius: 10px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .upload-zone:hover { border-color: #3B82F6; background: rgba(59, 130, 246, 0.1); }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    
+    .empty { text-align: center; padding: 48px 24px; color: #94A3B8; }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+    
+    .pipeline-step { display: flex; gap: 14px; padding: 14px 0; }
+    .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 12px; border: 2px solid; flex-shrink: 0; }
+    .step-circle.done { background: rgba(5, 150, 105, 0.15); border-color: #059669; color: #34D399; }
+    .step-circle.active { background: rgba(59, 130, 246, 0.15); border-color: #3B82F6; color: #3B82F6; }
+    .step-circle.pending { border-color: #1E3A5F; color: #64748B; }
+    
+    .progress-bar { height: 4px; background: #1E3A5F; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #0D9488); }
+    
+    .file-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0D1B2E; border-radius: 6px; margin-bottom: 8px; border: 1px solid #1E3A5F; }
+    
+    .case-card { background: #0D1B2E; border: 1px solid #1E3A5F; border-radius: 8px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s; }
+    .case-card:hover { background: #142236; border-color: #2B6CB0; }
+    .case-ref { font-family: 'DM Mono', monospace; font-size: 11px; color: #3B82F6; margin-bottom: 4px; }
+    .case-type { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+    .case-status { display: flex; gap: 10px; align-items: center; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function App() {
+      const [loggedIn, setLoggedIn] = useState(false);
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [loginError, setLoginError] = useState('');
+      const [page, setPage] = useState('dashboard');
+      const [selectedCase, setSelectedCase] = useState(null);
+      const [caseForm, setCaseForm] = useState({ type: '', summary: '', files: [] });
+      const [uploadStep, setUploadStep] = useState(0);
+
+      // Mock firm data
+      const firmEmail = 'harrison@harrisoncole.co.uk';
+      const firmPassword = 'password123';
+      const firmName = 'Harrison & Cole LLP';
+
+      // Mock cases for this firm
+      const [cases, setCases] = useState([
+        { id: 1, ref: 'MAI-2026-0042', type: 'Surgical Negligence', date: '2026-05-03', score: 61, status: 'pending_review', expert: 'Dr. Yılmaz', uploaded: 2 },
+        { id: 2, ref: 'MAI-2026-0041', type: 'Medication Error', date: '2026-05-02', score: 82, status: 'approved', expert: 'Dr. Yılmaz', uploaded: 3 },
+        { id: 3, ref: 'MAI-2026-0040', type: 'Delayed Diagnosis', date: '2026-05-01', score: 45, status: 'rejected', expert: 'Dr. Yılmaz', uploaded: 1 },
+        { id: 4, ref: 'MAI-2026-0039', type: 'Birth Injury', date: '2026-04-30', score: 74, status: 'approved', expert: 'Dr. Yılmaz', uploaded: 2 },
+      ]);
+
+      const pipelineSteps = ['Secure Upload', 'PII Anonymisation', 'Multi-LLM Analysis', 'Consistency Scoring', 'Expert Review'];
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        setLoginError('');
+        if (email === firmEmail && password === firmPassword) {
+          setLoggedIn(true);
+          setEmail('');
+          setPassword('');
+        } else {
+          setLoginError('Invalid email or password. Try: harrison@harrisoncole.co.uk / password123');
+        }
+      };
+
+      const handleLogout = () => {
+        setLoggedIn(false);
+        setPage('dashboard');
+        setEmail('');
+        setPassword('');
+      };
+
+      const handleUploadStart = () => {
+        if (!caseForm.type || caseForm.files.length === 0) return;
+        setPage('processing');
+        setUploadStep(0);
+        
+        const steps = [1, 2, 3, 4, 5];
+        steps.forEach((s, i) => {
+          setTimeout(() => {
+            setUploadStep(s);
+            if (s === 5) {
+              setTimeout(() => {
+                const newCase = {
+                  id: cases.length + 1,
+                  ref: `MAI-2026-${String(cases.length + 50).padStart(4, '0')}`,
+                  type: caseForm.type,
+                  date: new Date().toISOString().split('T')[0],
+                  score: Math.floor(Math.random() * 40 + 40),
+                  status: 'pending_review',
+                  expert: 'Dr. Yılmaz',
+                  uploaded: caseForm.files.length
+                };
+                setCases([newCase, ...cases]);
+                setCaseForm({ type: '', summary: '', files: [] });
+                setPage('cases');
+              }, 1000);
+            }
+          }, i * 1200);
+        });
+      };
+
+      const StatusBadge = ({ status }) => {
+        const map = {
+          approved: ['badge-green', '✓ Approved'],
+          pending_review: ['badge-amber', '● Pending'],
+          rejected: ['badge-red', '✕ Rejected'],
+        };
+        const [cls, label] = map[status] || ['badge-blue', status];
+        return <span className={`badge ${cls}`}>{label}</span>;
+      };
+
+      if (!loggedIn) {
+        return (
+          <div className="login-screen">
+            <div className="login-bg" />
+            <div className="login-card">
+              <div className="login-title">MedLegal<span>-AI</span></div>
+              <div className="login-sub">Law Firm Portal</div>
+
+              {loginError && <div className="login-error">{loginError}</div>}
+
+              <form onSubmit={handleLogin}>
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@lawfirm.co.uk" required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <input className="form-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+                </div>
+                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} type="submit">
+                  Sign In
+                </button>
+              </form>
+
+              <div className="login-hint">Demo: harrison@harrisoncole.co.uk / password123</div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="app">
+          {/* Sidebar */}
+          <div className="sidebar">
+            <div className="sidebar-content">
+              <div className="logo">
+                <div className="logo-text">MedLegal<span>-AI</span></div>
+                <div className="logo-sub">Law Firm Portal</div>
+              </div>
+
+              <div style={{ paddingTop: 12 }}>
+                <div className="nav-item" style={{ marginLeft: 10, marginRight: 10, marginBottom: 12, cursor: 'default', color: '#94A3B8' }}>
+                  📊 Dashboard
+                </div>
+                <div className={`nav-item ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
+                  📈 Overview
+                </div>
+                <div className={`nav-item ${page === 'cases' ? 'active' : ''}`} onClick={() => setPage('cases')}>
+                  📋 My Cases
+                  <span className="nav-badge">{cases.length}</span>
+                </div>
+                <div className={`nav-item ${page === 'upload' ? 'active' : ''}`} onClick={() => setPage('upload')}>
+                  ↑ Upload Case
+                </div>
+
+                <div className="nav-section" style={{ marginTop: 20 }}>Help</div>
+                <div className={`nav-item ${page === 'help' ? 'active' : ''}`} onClick={() => setPage('help')}>
+                  ❓ How It Works
+                </div>
+              </div>
+            </div>
+
+            <div className="sidebar-firm">
+              <div className="firm-name">{firmName}</div>
+              <div className="firm-role">Law Firm Account</div>
+              <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
+            </div>
+          </div>
+
+          {/* Main */}
+          <div className="main">
+            <div className="topbar">
+              <div>
+                <div className="topbar-title">
+                  {page === 'dashboard' && 'Overview'}
+                  {page === 'cases' && 'My Cases'}
+                  {page === 'upload' && 'Upload New Case'}
+                  {page === 'processing' && 'Processing Case'}
+                  {page === 'report' && selectedCase?.ref}
+                  {page === 'help' && 'How It Works'}
+                </div>
+                <div className="topbar-sub">
+                  {page === 'dashboard' && 'Your case pipeline at a glance'}
+                  {page === 'cases' && `${cases.length} cases submitted`}
+                  {page === 'upload' && 'Submit medical records for expert analysis'}
+                  {page === 'processing' && 'Your case is being analysed...'}
+                  {page === 'report' && 'Case analysis report'}
+                  {page === 'help' && 'Understanding the MedLegal-AI workflow'}
+                </div>
+              </div>
+            </div>
+
+            <div className="content">
+              {/* Dashboard */}
+              {page === 'dashboard' && (
+                <>
+                  <div className="stats-grid">
+                    <div className="stat-card">
+                      <div className="stat-label">Total Cases</div>
+                      <div className="stat-value">{cases.length}</div>
+                    </div>
+                    <div className="stat-card amber">
+                      <div className="stat-label">Pending Review</div>
+                      <div className="stat-value">{cases.filter(c => c.status === 'pending_review').length}</div>
+                    </div>
+                    <div className="stat-card green">
+                      <div className="stat-label">Approved</div>
+                      <div className="stat-value">{cases.filter(c => c.status === 'approved').length}</div>
+                    </div>
+                    <div className="stat-card red">
+                      <div className="stat-label">Declined</div>
+                      <div className="stat-value">{cases.filter(c => c.status === 'rejected').length}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid-2">
+                    <div className="card">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                        <div className="card-title" style={{ marginBottom: 0 }}>Recent Cases</div>
+                        <button className="btn btn-primary btn-sm" onClick={() => setPage('upload')}>+ Upload</button>
+                      </div>
+                      {cases.length === 0 ? (
+                        <div className="empty"><div className="empty-icon">📋</div><div>No cases yet</div></div>
+                      ) : (
+                        cases.slice(0, 5).map(c => (
+                          <div key={c.id} className="case-card" onClick={() => { setSelectedCase(c); setPage('report'); }}>
+                            <div className="case-ref">{c.ref}</div>
+                            <div className="case-type">{c.type}</div>
+                            <div className="case-status">
+                              <StatusBadge status={c.status} />
+                              <span style={{ color: '#94A3B8' }}>Score: {c.score}</span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="card">
+                      <div className="card-title">Next Steps</div>
+                      <div style={{ fontSize: 13, lineHeight: 1.8, color: '#94A3B8' }}>
+                        <div style={{ marginBottom: 12 }}>
+                          <strong style={{ color: '#F1F5F9' }}>📤 Upload Cases</strong><br />
+                          Submit medical records for AI-powered triage analysis
+                        </div>
+                        <div style={{ marginBottom: 12 }}>
+                          <strong style={{ color: '#F1F5F9' }}>⏱ Wait for Review</strong><br />
+                          Expert analysis typically completes within 24-48 hours
+                        </div>
+                        <div>
+                          <strong style={{ color: '#F1F5F9' }}>📥 Download Report</strong><br />
+                          Get signed expert report and proceed with case
+                        </div>
+                      </div>
+                      <button className="btn btn-primary" style={{ width: '100%', marginTop: 14, justifyContent: 'center' }} onClick={() => setPage('upload')}>
+                        Upload First Case →
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Cases */}
+              {page === 'cases' && (
+                <div className="card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div className="card-title" style={{ marginBottom: 0 }}>All Your Cases</div>
+                    <button className="btn btn-primary btn-sm" onClick={() => setPage('upload')}>+ Upload</button>
+                  </div>
+                  {cases.length === 0 ? (
+                    <div className="empty"><div className="empty-icon">📋</div><div>No cases uploaded yet</div></div>
+                  ) : (
+                    <table>
+                      <thead>
+                        <tr><th>Reference</th><th>Type</th><th>Date</th><th>Score</th><th>Status</th><th>Action</th></tr>
+                      </thead>
+                      <tbody>
+                        {cases.map(c => (
+                          <tr key={c.id}>
+                            <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#3B82F6' }}>{c.ref}</td>
+                            <td>{c.type}</td>
+                            <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#94A3B8' }}>{c.date}</td>
+                            <td style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: c.score >= 60 ? '#0D9488' : '#D97706' }}>{c.score}</td>
+                            <td><StatusBadge status={c.status} /></td>
+                            <td>
+                              <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedCase(c); setPage('report'); }}>
+                                {c.status === 'approved' ? 'Download' : 'View'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+
+              {/* Upload */}
+              {page === 'upload' && (
+                <div style={{ maxWidth: 720 }}>
+                  <div className="card">
+                    <div className="card-title">Submit New Case</div>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Case Type *</label>
+                      <select className="form-select" value={caseForm.type} onChange={e => setCaseForm({...caseForm, type: e.target.value})}>
+                        <option value="">Select case type...</option>
+                        <option>Surgical Negligence</option>
+                        <option>Medication Error</option>
+                        <option>Delayed Diagnosis</option>
+                        <option>GP Negligence</option>
+                        <option>Birth Injury</option>
+                        <option>Anaesthesia Error</option>
+                        <option>Hospital Acquired Infection</option>
+                        <option>Other Clinical Negligence</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Brief Case Summary (Optional)</label>
+                      <textarea className="form-textarea" value={caseForm.summary} onChange={e => setCaseForm({...caseForm, summary: e.target.value})} placeholder="2-3 sentences about the alleged negligence..." />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Medical Records *</label>
+                      <div className="upload-zone" onClick={() => document.getElementById('file-input').click()}>
+                        <input id="file-input" type="file" multiple accept=".pdf,.jpg,.png" onChange={e => setCaseForm({...caseForm, files: Array.from(e.target.files)})} style={{ display: 'none' }} />
+                        <div style={{ fontSize: 14, marginBottom: 6 }}>📁 Click to browse or drag files</div>
+                        <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: "'DM Mono', monospace" }}>PDF, JPG, PNG up to 50MB · {caseForm.files.length} file(s) selected</div>
+                      </div>
+                    </div>
+
+                    {caseForm.files.length > 0 && (
+                      <div style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: "'DM Mono', monospace", marginBottom: 8 }}>Files ready to upload:</div>
+                        {caseForm.files.map((f, i) => (
+                          <div key={i} className="file-item">
+                            <span>📄</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 12, fontWeight: 500 }}>{f.name}</div>
+                              <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: "'DM Mono', monospace" }}>{(f.size / 1024).toFixed(1)} KB</div>
+                            </div>
+                            <span className="badge badge-green">Ready</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ background: 'rgba(13,148,136,0.08)', border: '1px solid rgba(13,148,136,0.2)', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 12, color: '#94A3B8', borderLeft: '3px solid #0D9488' }}>
+                      <strong style={{ color: '#2DD4BF' }}>🔒 Your Privacy:</strong> All patient identifiable information is automatically anonymised before analysis. Your firm's data never leaves encrypted storage.
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <button className="btn btn-primary" disabled={!caseForm.type || caseForm.files.length === 0} onClick={handleUploadStart}>
+                        Submit for Analysis →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Processing */}
+              {page === 'processing' && (
+                <div style={{ maxWidth: 720 }}>
+                  <div className="card">
+                    <div className="card-title">Analysing Your Case</div>
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontFamily: "'DM Mono', monospace", color: '#94A3B8', marginBottom: 6 }}>
+                        <span>Pipeline Progress</span>
+                        <span>{Math.round((uploadStep / 5) * 100)}%</span>
+                      </div>
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${(uploadStep / 5) * 100}%` }} />
+                      </div>
+                    </div>
+
+                    {pipelineSteps.map((label, i) => {
+                      const state = i < uploadStep ? 'done' : i === uploadStep ? 'active' : 'pending';
+                      return (
+                        <div key={i} className="pipeline-step">
+                          <div className={`step-circle ${state}`}>
+                            {state === 'done' ? '✓' : i + 1}
+                          </div>
+                          <div style={{ paddingTop: 6 }}>
+                            <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
+                            {state === 'active' && <div style={{ fontSize: 12, color: '#3B82F6', marginTop: 4 }}>Processing...</div>}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <div style={{ marginTop: 20, padding: 12, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 6, fontSize: 12, color: '#94A3B8' }}>
+                      ⏱ Typical analysis time: 24-48 hours. Expert will review and you'll receive a signed report.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Report */}
+              {page === 'report' && selectedCase && (
+                <div>
+                  <div className="card">
+                    <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#64748B', marginBottom: 8 }}>CASE REFERENCE · {selectedCase.ref}</div>
+                    <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{selectedCase.type}</div>
+                    <div style={{ fontSize: 12, color: '#94A3B8', fontFamily: "'DM Mono', monospace", marginBottom: 12 }}>Submitted: {selectedCase.date} · Reviewed by: {selectedCase.expert}</div>
+                    <StatusBadge status={selectedCase.status} />
+                  </div>
+
+                  <div className="grid-2">
+                    <div className="card">
+                      <div className="card-title">Risk Assessment</div>
+                      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 48, fontWeight: 800, color: selectedCase.score >= 60 ? '#0D9488' : '#D97706', letterSpacing: -1 }}>
+                        {selectedCase.score}<span style={{ fontSize: 16, color: '#94A3B8' }}>/100</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8 }}>
+                        {selectedCase.score >= 75 ? '✓ Strong merit case' : selectedCase.score >= 60 ? '✓ Moderate merit - pursue to expert' : '○ Weak merit - reconsider'}
+                      </div>
+                    </div>
+
+                    <div className="card">
+                      <div className="card-title">Analysis Summary</div>
+                      <table style={{ fontSize: 11, marginTop: 0 }}>
+                        <tbody>
+                          <tr><td style={{ paddingRight: 16 }}>Duty of Care</td><td style={{ color: '#34D399' }}>✓ Confirmed</td></tr>
+                          <tr><td style={{ paddingRight: 16 }}>Breach (Bolam)</td><td style={{ color: '#FCD34D' }}>~ Arguable</td></tr>
+                          <tr><td style={{ paddingRight: 16 }}>Defensibility</td><td style={{ color: '#FCD34D' }}>~ Contestable</td></tr>
+                          <tr><td style={{ paddingRight: 16 }}>Causation</td><td style={{ color: '#FCD34D' }}>~ Arguable</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {selectedCase.status === 'approved' && (
+                    <div className="card">
+                      <div className="card-title">✓ Approved Report</div>
+                      <p style={{ color: '#94A3B8', fontSize: 12, marginBottom: 12 }}>This case has been approved by the expert and is ready for your review. Download the full signed report below.</p>
+                      <button className="btn btn-primary">
+                        📥 Download Full Report (PDF)
+                      </button>
+                    </div>
+                  )}
+
+                  {selectedCase.status === 'pending_review' && (
+                    <div className="card">
+                      <div className="card-title">⏳ Under Expert Review</div>
+                      <p style={{ color: '#94A3B8', fontSize: 12 }}>This case is currently being reviewed by our expert panel. You'll receive a detailed report within 24-48 hours.</p>
+                    </div>
+                  )}
+
+                  {selectedCase.status === 'rejected' && (
+                    <div className="card">
+                      <div className="card-title">✕ Not Recommended</div>
+                      <p style={{ color: '#94A3B8', fontSize: 12 }}>After expert analysis, this case does not have sufficient merit to justify pursuing to full expert report stage. You can contact our team if you'd like to discuss further.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Help */}
+              {page === 'help' && (
+                <div style={{ maxWidth: 720 }}>
+                  <div className="card">
+                    <div className="card-title">How MedLegal-AI Works</div>
+                    <div style={{ color: '#94A3B8', fontSize: 13, lineHeight: 1.8 }}>
+                      <div style={{ marginBottom: 16 }}>
+                        <strong style={{ color: '#F1F5F9' }}>Step 1: Upload Medical Records</strong><br />
+                        Submit patient medical records (anonymised). The system automatically detects and masks all personal identifiable information before processing.
+                      </div>
+                      <div style={{ marginBottom: 16 }}>
+                        <strong style={{ color: '#F1F5F9' }}>Step 2: AI Analysis</strong><br />
+                        Four independent AI models (GPT-4, Gemini, Claude, DeepSeek) analyse your case simultaneously against UK clinical negligence law (Bolam/Bolitho tests).
+                      </div>
+                      <div style={{ marginBottom: 16 }}>
+                        <strong style={{ color: '#F1F5F9' }}>Step 3: Expert Review</strong><br />
+                        A qualified expert (MD + Lawyer) reviews the AI output, checks the clinical and legal reasoning, and signs off the report.
+                      </div>
+                      <div>
+                        <strong style={{ color: '#F1F5F9' }}>Step 4: Download & Proceed</strong><br />
+                        You receive a signed expert report. Use it to decide whether to pursue the case with a full expert assessment.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="card">
+                    <div className="card-title">Pricing</div>
+                    <table>
+                      <tbody>
+                        <tr>
+                          <td style={{ paddingRight: 24 }}>
+                            <strong style={{ color: '#F1F5F9' }}>Expert Report</strong><br />
+                            <span style={{ fontSize: 11, color: '#94A3B8' }}>Traditional process</span>
+                          </td>
+                          <td style={{ textAlign: 'right', color: '#F1F5F9', fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 16 }}>
+                            £500–£1,000<br />
+                            <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 400 }}>2–4 weeks</span>
+                          </td>
+                        </tr>
+                        <tr style={{ borderTop: '1px solid #1E3A5F' }}>
+                          <td style={{ paddingRight: 24, paddingTop: 12 }}>
+                            <strong style={{ color: '#F1F5F9' }}>MedLegal-AI</strong><br />
+                            <span style={{ fontSize: 11, color: '#94A3B8' }}>Expert-backed AI pre-screening</span>
+                          </td>
+                          <td style={{ textAlign: 'right', paddingTop: 12 }}>
+                            <strong style={{ color: '#34D399', fontFamily: "'Syne', sans-serif", fontSize: 16 }}>£75–£150</strong><br />
+                            <span style={{ fontSize: 11, color: '#94A3B8' }}>24–48 hours</span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
