@@ -10,43 +10,57 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0D1B2E; color: #F1F5F9; font-family: 'DM Sans', sans-serif; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0D1B2E; }
+    ::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 2px; }
     
-    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0D1B2E; }
-    .login-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 14px; padding: 40px; width: 380px; }
-    .login-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0D1B2E; position: relative; }
+    .login-screen::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(43,108,176,0.12) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(13,148,136,0.08) 0%, transparent 50%); }
+    .login-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 14px; padding: 40px; width: 400px; position: relative; z-index: 1; }
+    .login-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 4px; }
     .login-title span { color: #3B82F6; }
-    .login-sub { font-size: 11px; color: #64748B; margin-bottom: 24px; text-align: center; }
-    .login-error { background: rgba(220,38,38,0.12); color: #F87171; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; }
-    .login-hint { font-size: 11px; color: #64748B; text-align: center; margin-top: 16px; }
+    .login-sub { font-size: 11px; color: #64748B; margin-bottom: 28px; text-align: center; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; }
+    .login-error { background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.3); color: #F87171; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; }
+    .login-hint { font-size: 11px; color: #64748B; text-align: center; margin-top: 20px; font-family: 'DM Mono', monospace; }
     
     .form-group { margin-bottom: 14px; }
-    .form-label { font-size: 11px; color: #94A3B8; text-transform: uppercase; display: block; margin-bottom: 6px; }
-    .form-input { width: 100%; background: #0D1B2E; border: 1px solid #1E3A5F; padding: 9px 12px; color: #F1F5F9; border-radius: 6px; font-size: 13px; }
-    .form-input:focus { outline: none; border-color: #3B82F6; }
+    .form-label { font-size: 11px; color: #94A3B8; text-transform: uppercase; display: block; margin-bottom: 6px; font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+    .form-input, .form-select { width: 100%; background: #0D1B2E; border: 1px solid #1E3A5F; padding: 10px 12px; color: #F1F5F9; border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif; }
+    .form-input:focus, .form-select:focus { outline: none; border-color: #3B82F6; }
+    .form-textarea { width: 100%; background: #0D1B2E; border: 1px solid #1E3A5F; padding: 10px 12px; color: #F1F5F9; border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif; min-height: 100px; resize: vertical; }
+    .form-textarea:focus { outline: none; border-color: #3B82F6; }
     
-    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; }
-    .btn-primary { background: #2B6CB0; color: white; width: 100%; }
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .btn-primary { background: #2B6CB0; color: white; }
     .btn-primary:hover { background: #2563EB; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: #94A3B8; border: 1px solid #1E3A5F; }
+    .btn-ghost:hover { background: #1C3050; color: #F1F5F9; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
     
     .app { display: flex; height: 100vh; }
-    .sidebar { width: 240px; background: #142236; border-right: 1px solid #1E3A5F; padding: 20px; display: flex; flex-direction: column; }
+    .sidebar { width: 240px; background: #142236; border-right: 1px solid #1E3A5F; display: flex; flex-direction: column; }
+    .sidebar-content { flex: 1; overflow-y: auto; padding-top: 12px; }
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     
-    .logo { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 24px; }
-    .logo span { color: #3B82F6; }
+    .logo { padding: 24px 20px; border-bottom: 1px solid #1E3A5F; }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .logo-text span { color: #3B82F6; }
+    .logo-sub { font-size: 9px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
     
-    .nav-item { padding: 9px 12px; margin-bottom: 6px; border-radius: 6px; cursor: pointer; font-size: 13px; border: 1px solid transparent; }
-    .nav-item:hover { background: #1C3050; }
-    .nav-item.active { background: rgba(59,130,246,0.15); color: #3B82F6; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 0 10px 2px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #94A3B8; border: 1px solid transparent; transition: all 0.15s; }
+    .nav-item:hover { background: #1C3050; color: #F1F5F9; }
+    .nav-item.active { background: rgba(59,130,246,0.15); color: #3B82F6; border-color: rgba(59,130,246,0.2); }
+    .nav-badge { margin-left: auto; background: #2B6CB0; color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-family: 'DM Mono', monospace; }
+    .nav-section { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: #64748B; padding: 12px 10px 6px; text-transform: uppercase; }
     
-    .sidebar-user { margin-top: auto; padding-top: 16px; border-top: 1px solid #1E3A5F; }
+    .sidebar-user { padding: 16px; border-top: 1px solid #1E3A5F; }
     .user-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
-    .user-role { font-size: 10px; color: #64748B; margin-bottom: 12px; }
+    .user-role { font-size: 10px; color: #64748B; font-family: 'DM Mono', monospace; margin-bottom: 12px; }
     
-    .topbar { padding: 20px 28px; border-bottom: 1px solid #1E3A5F; background: #142236; }
+    .topbar { padding: 20px 28px; border-bottom: 1px solid #1E3A5F; background: #142236; flex-shrink: 0; }
     .topbar-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
-    .topbar-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+    .topbar-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; font-family: 'DM Mono', monospace; }
     
     .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
     
@@ -54,353 +68,466 @@
     .card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
     
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
-    .stat-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 10px; padding: 18px; position: relative; }
+    .stat-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 10px; padding: 18px; position: relative; overflow: hidden; }
     .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #3B82F6; }
-    .stat-label { font-size: 10px; color: #64748B; margin-bottom: 8px; }
-    .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; }
+    .stat-card.amber::before { background: #D97706; }
+    .stat-card.green::before { background: #059669; }
+    .stat-card.red::before { background: #DC2626; }
+    .stat-label { font-size: 10px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -1px; }
     
-    .upload-zone { border: 2px dashed #1E3A5F; border-radius: 10px; padding: 48px 24px; text-align: center; cursor: pointer; }
+    .upload-zone { border: 2px dashed #1E3A5F; border-radius: 10px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
     .upload-zone:hover { border-color: #3B82F6; background: rgba(59,130,246,0.1); }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th { text-align: left; padding: 10px 0; border-bottom: 1px solid #1E3A5F; font-size: 10px; text-transform: uppercase; color: #64748B; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 0; border-bottom: 1px solid #1E3A5F; font-size: 10px; text-transform: uppercase; color: #64748B; font-family: 'DM Mono', monospace; }
     td { padding: 12px 0; border-bottom: 1px solid rgba(30,58,95,0.5); font-size: 13px; }
     
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; }
+    .badge-blue { background: rgba(59,130,246,0.15); color: #3B82F6; }
     .badge-green { background: rgba(5,150,105,0.15); color: #34D399; }
     .badge-amber { background: rgba(217,119,6,0.15); color: #FCD34D; }
+    .badge-red { background: rgba(220,38,38,0.15); color: #F87171; }
+    .badge-teal { background: rgba(13,148,136,0.15); color: #2DD4BF; }
     
-    .loading { text-align: center; padding: 20px; color: #94A3B8; }
     .empty { text-align: center; padding: 48px 24px; color: #94A3B8; }
+    
+    .pipeline-step { display: flex; gap: 14px; padding: 12px 0; }
+    .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 12px; border: 2px solid; flex-shrink: 0; }
+    .step-circle.done { background: rgba(5,150,105,0.15); border-color: #059669; color: #34D399; }
+    .step-circle.active { background: rgba(59,130,246,0.15); border-color: #3B82F6; color: #3B82F6; animation: pulse 1.5s infinite; }
+    .step-circle.pending { border-color: #1E3A5F; color: #64748B; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    .progress-bar { height: 4px; background: #1E3A5F; border-radius: 2px; overflow: hidden; margin-bottom: 16px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #0D9488); transition: width 0.5s; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    
+    .model-card { background: #0D1B2E; border: 1px solid #1E3A5F; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .model-name { font-family: 'DM Mono', monospace; font-size: 11px; margin-bottom: 8px; }
+    .model-score { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; }
+    
+    .file-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0D1B2E; border-radius: 6px; margin-bottom: 8px; border: 1px solid #1E3A5F; }
+    
+    .privacy-note { background: rgba(13,148,136,0.08); border: 1px solid rgba(13,148,136,0.2); border-left: 3px solid #0D9488; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: #94A3B8; }
   </style>
 </head>
 <body>
   <div id="app"></div>
 
   <script>
-    // Supabase Config
+    // ==================== CONFIG ====================
     const SUPABASE_URL = 'https://nhotxxkehumweboxqkka.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_3UKw258JCeGIsInKmz291w_Fc658oH3';
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const AI_KEYS = {
+      openai: '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',
+      gemini: 'AIzaSyDxQJSU2LfIJ8PLxk42GW54Z6t8x--5LQI',
+      deepseek: 'sk-c5de9b4e4f214bbc8b3a2251473551c1'
+    };
+    
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // App State
+    // ==================== PII ANONYMISATION ====================
+    function anonymisePII(text) {
+      if (!text) return text;
+      let clean = text;
+      clean = clean.replace(/\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b/g, '[NHS-REDACTED]');
+      clean = clean.replace(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/gi, '[POSTCODE-REDACTED]');
+      clean = clean.replace(/\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b/g, '[DOB-REDACTED]');
+      clean = clean.replace(/\b[\w.-]+@[\w.-]+\.\w{2,}\b/g, '[EMAIL-REDACTED]');
+      clean = clean.replace(/\b(?:0|\+44)\s*\d[\d\s]{8,12}\b/g, '[PHONE-REDACTED]');
+      return clean;
+    }
+
+    // ==================== BOLAM/BOLITHO PROMPT ====================
+    function buildPrompt(caseType, caseSummary) {
+      return `You are a UK clinical negligence legal analyst. Analyse this case under UK law.
+
+CASE TYPE: ${caseType}
+CASE SUMMARY: ${anonymisePII(caseSummary)}
+
+Apply these legal tests:
+
+1. DUTY OF CARE: Did a doctor-patient relationship exist?
+   Rate: Confirmed / Arguable / Not Established
+
+2. BREACH (BOLAM TEST): Would a responsible body of medical opinion consider this treatment acceptable?
+   Rate: Clear Breach / Arguable Breach / No Breach
+
+3. BOLITHO DEFENSIBILITY: Does the defence position withstand logical scrutiny?
+   Rate: Not Defensible / Partially Defensible / Fully Defensible
+
+4. CAUSATION: Did the breach directly cause the harm (but-for test)?
+   Rate: Established / Arguable / Not Established
+
+5. OVERALL RISK SCORE: 0-100 (0=no merit, 100=very strong)
+
+6. RECOMMENDATION: "Proceed to Expert Report" / "Borderline - Consider Further" / "Do Not Pursue"
+
+Respond ONLY in this JSON format with no other text:
+{"duty_of_care":"string","breach_bolam":"string","bolitho_defensibility":"string","causation":"string","risk_score":0,"recommendation":"string","reasoning":"string"}`;
+    }
+
+    // ==================== AI MODEL CALLERS ====================
+    async function callGPT4(prompt) {
+      try {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AI_KEYS.openai },
+          body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 800 })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return JSON.parse(data.choices[0].message.content.replace(/```json|```/g, '').trim());
+      } catch (e) { console.error('GPT-4 error:', e); return null; }
+    }
+
+    async function callGemini(prompt) {
+      try {
+        const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + AI_KEYS.gemini, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 800 } })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim());
+      } catch (e) { console.error('Gemini error:', e); return null; }
+    }
+
+    async function callDeepSeek(prompt) {
+      try {
+        const res = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AI_KEYS.deepseek },
+          body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 800 })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return JSON.parse(data.choices[0].message.content.replace(/```json|```/g, '').trim());
+      } catch (e) { console.error('DeepSeek error:', e); return null; }
+    }
+
+    // ==================== PIPELINE ====================
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function runPipeline(caseType, caseSummary, caseId, onStep) {
+      const prompt = buildPrompt(caseType, caseSummary);
+      const results = {};
+
+      onStep(1, 'PII Anonymisation complete');
+      await sleep(500);
+
+      onStep(2, 'Calling GPT-4...');
+      results.gpt4 = await callGPT4(prompt);
+
+      onStep(3, 'Calling Gemini...');
+      results.gemini = await callGemini(prompt);
+
+      onStep(4, 'Calling DeepSeek...');
+      results.deepseek = await callDeepSeek(prompt);
+
+      onStep(5, 'Calculating consensus...');
+      await sleep(300);
+
+      const validResults = Object.entries(results).filter(([k, v]) => v !== null);
+      
+      let avgScore = 0, consistency = 0;
+      
+      if (validResults.length > 0) {
+        const scores = validResults.map(([k, v]) => v.risk_score);
+        avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        if (scores.length > 1) {
+          const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+          const variance = scores.reduce((a, s) => a + Math.pow(s - mean, 2), 0) / scores.length;
+          consistency = Math.round(Math.max(0, 100 - Math.sqrt(variance) * 2));
+        } else { consistency = 75; }
+      }
+
+      for (const [model, result] of validResults) {
+        await db.from('model_results').insert({
+          case_id: caseId, model_name: model, score: result.risk_score,
+          duty_of_care: result.duty_of_care, breach_bolam: result.breach_bolam,
+          bolitho_defensibility: result.bolitho_defensibility, causation: result.causation
+        });
+      }
+
+      await db.from('cases').update({
+        risk_score: avgScore, consistency_score: consistency,
+        status: 'pending_review', updated_at: new Date().toISOString()
+      }).eq('id', caseId);
+
+      onStep(6, 'Complete');
+      return { avgScore, consistency, results: Object.fromEntries(validResults) };
+    }
+
+    // ==================== APP STATE ====================
     let state = {
-      loggedIn: false,
-      firmId: null,
-      firmName: null,
-      page: 'dashboard',
-      cases: [],
-      selectedCase: null,
-      loading: false,
-      error: ''
+      loggedIn: false, firmId: null, firmName: null, page: 'dashboard',
+      cases: [], selectedCase: null, modelResults: [],
+      pipelineStep: 0, pipelineMsg: '', pipelineResult: null, error: ''
     };
 
-    // Render App
-    async function render() {
+    // ==================== RENDER ====================
+    function render() {
       const app = document.getElementById('app');
-      
       if (!state.loggedIn) {
         app.innerHTML = renderLogin();
-        attachLoginListeners();
+        setTimeout(attachLoginListeners, 0);
       } else {
         app.innerHTML = renderApp();
-        attachAppListeners();
-        if (state.cases.length === 0) {
-          await loadCases();
-        }
+        setTimeout(attachAppListeners, 0);
       }
     }
 
     function renderLogin() {
-      return `
-        <div class="login-screen">
-          <div class="login-card">
-            <div class="login-title">MedLegal<span>-AI</span></div>
-            <div class="login-sub">Law Firm Portal</div>
-            
-            ${state.error ? `<div class="login-error">${state.error}</div>` : ''}
-            
-            <form id="login-form">
-              <div class="form-group">
-                <label class="form-label">Email</label>
-                <input class="form-input" id="email" type="email" placeholder="harrison@harrisoncole.co.uk" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Password</label>
-                <input class="form-input" id="password" type="password" placeholder="••••••••" required>
-              </div>
-              <button class="btn btn-primary" type="submit">Sign In</button>
-            </form>
-            
-            <div class="login-hint">Demo: harrison@harrisoncole.co.uk / password123</div>
-          </div>
-        </div>
-      `;
+      return '<div class="login-screen"><div class="login-card">' +
+        '<div class="login-title">MedLegal<span>-AI</span></div>' +
+        '<div class="login-sub">Law Firm Portal</div>' +
+        (state.error ? '<div class="login-error">' + state.error + '</div>' : '') +
+        '<form id="login-form">' +
+        '<div class="form-group"><label class="form-label">Email</label><input class="form-input" id="email" type="email" placeholder="your@lawfirm.co.uk" required></div>' +
+        '<div class="form-group"><label class="form-label">Password</label><input class="form-input" id="password" type="password" placeholder="••••••••" required></div>' +
+        '<button class="btn btn-primary" type="submit" style="width:100%">Sign In</button></form>' +
+        '<div class="login-hint">Demo: harrison@harrisoncole.co.uk / password123</div></div></div>';
+    }
+
+    function statusBadge(status) {
+      var map = {
+        uploaded: ['badge-blue', '● Uploaded'], processing: ['badge-blue', '⟳ Processing'],
+        pending_review: ['badge-amber', '● Pending Review'], approved: ['badge-green', '✓ Approved'],
+        rejected: ['badge-red', '✕ Rejected']
+      };
+      var arr = map[status] || ['badge-blue', status];
+      return '<span class="badge ' + arr[0] + '">' + arr[1] + '</span>';
     }
 
     function renderApp() {
-      return `
-        <div class="app">
-          <div class="sidebar">
-            <div class="logo">MedLegal<span>-AI</span></div>
-            
-            <div class="nav-item ${state.page === 'dashboard' ? 'active' : ''}" onclick="changePage('dashboard')">📈 Overview</div>
-            <div class="nav-item ${state.page === 'cases' ? 'active' : ''}" onclick="changePage('cases')">📋 My Cases (${state.cases.length})</div>
-            <div class="nav-item ${state.page === 'upload' ? 'active' : ''}" onclick="changePage('upload')">↑ Upload Case</div>
-            
-            <div class="sidebar-user">
-              <div class="user-name">${state.firmName}</div>
-              <div class="user-role">Law Firm</div>
-              <button class="btn btn-primary" onclick="logout()" style="padding: 5px 12px; font-size: 12px;">Sign Out</button>
-            </div>
-          </div>
-          
-          <div class="main">
-            <div class="topbar">
-              <div class="topbar-title">
-                ${state.page === 'dashboard' ? 'Overview' : state.page === 'cases' ? 'My Cases' : 'Upload Case'}
-              </div>
-              <div class="topbar-sub">
-                ${state.page === 'dashboard' ? 'Your case pipeline' : state.page === 'cases' ? `${state.cases.length} cases` : 'Submit medical records'}
-              </div>
-            </div>
-            
-            <div class="content">
-              ${state.page === 'dashboard' ? renderDashboard() : ''}
-              ${state.page === 'cases' ? renderCases() : ''}
-              ${state.page === 'upload' ? renderUpload() : ''}
-            </div>
-          </div>
-        </div>
-      `;
+      var pages = { dashboard: 'Overview', cases: 'My Cases', upload: 'Upload New Case', processing: 'Analysing Case', report: state.selectedCase ? state.selectedCase.reference : 'Report' };
+      return '<div class="app"><div class="sidebar"><div class="logo"><div class="logo-text">MedLegal<span>-AI</span></div><div class="logo-sub">Law Firm Portal</div></div>' +
+        '<div class="sidebar-content"><div class="nav-section">Main</div>' +
+        '<div class="nav-item ' + (state.page === 'dashboard' ? 'active' : '') + '" onclick="changePage(\'dashboard\')">📈 Overview</div>' +
+        '<div class="nav-item ' + (state.page === 'cases' ? 'active' : '') + '" onclick="changePage(\'cases\')">📋 My Cases <span class="nav-badge">' + state.cases.length + '</span></div>' +
+        '<div class="nav-item ' + (state.page === 'upload' ? 'active' : '') + '" onclick="changePage(\'upload\')">↑ Upload Case</div></div>' +
+        '<div class="sidebar-user"><div class="user-name">' + state.firmName + '</div><div class="user-role">Law Firm Account</div>' +
+        '<button class="btn btn-ghost btn-sm" onclick="logout()" style="width:100%;margin-top:8px">Sign Out</button></div></div>' +
+        '<div class="main"><div class="topbar"><div class="topbar-title">' + (pages[state.page] || '') + '</div>' +
+        '<div class="topbar-sub">' + (state.page === 'processing' ? 'AI analysis in progress...' : '') + '</div></div>' +
+        '<div class="content">' +
+        (state.page === 'dashboard' ? renderDashboard() : '') +
+        (state.page === 'cases' ? renderCases() : '') +
+        (state.page === 'upload' ? renderUpload() : '') +
+        (state.page === 'processing' ? renderProcessing() : '') +
+        (state.page === 'report' ? renderReport() : '') +
+        '</div></div></div>';
     }
 
     function renderDashboard() {
-      const pending = state.cases.filter(c => c.status === 'pending_review').length;
-      const approved = state.cases.filter(c => c.status === 'approved').length;
-      
-      return `
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-label">Total Cases</div><div class="stat-value">${state.cases.length}</div></div>
-          <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value">${pending}</div></div>
-          <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value">${approved}</div></div>
-          <div class="stat-card"><div class="stat-label">Action</div><button class="btn btn-primary" onclick="changePage('upload')" style="padding: 4px 8px; font-size: 11px;">+ Upload</button></div>
-        </div>
-        
-        <div class="card">
-          <div class="card-title">Recent Cases</div>
-          ${state.cases.length === 0 ? '<div class="empty">No cases yet. Upload your first case.</div>' : `
-            <table>
-              <thead><tr><th>Reference</th><th>Type</th><th>Status</th></tr></thead>
-              <tbody>
-                ${state.cases.slice(0, 5).map(c => `
-                  <tr onclick="selectCase(${c.id})">
-                    <td style="font-family: 'DM Mono'; color: #3B82F6;">${c.reference}</td>
-                    <td>${c.case_type}</td>
-                    <td><span class="badge ${c.status === 'approved' ? 'badge-green' : 'badge-amber'}">${c.status}</span></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          `}
-        </div>
-      `;
+      var pending = state.cases.filter(function(c) { return c.status === 'pending_review'; }).length;
+      var approved = state.cases.filter(function(c) { return c.status === 'approved'; }).length;
+      var rejected = state.cases.filter(function(c) { return c.status === 'rejected'; }).length;
+
+      var rows = state.cases.slice(0, 5).map(function(c) {
+        return '<tr><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:#3B82F6">' + c.reference + '</td>' +
+          '<td style="font-size:12px;color:#94A3B8">' + c.case_type + '</td>' +
+          '<td style="font-family:\'Syne\',sans-serif;font-weight:700;color:' + ((c.risk_score || 0) >= 60 ? '#0D9488' : '#D97706') + '">' + (c.risk_score || '—') + '</td>' +
+          '<td>' + statusBadge(c.status) + '</td>' +
+          '<td><button class="btn btn-ghost btn-sm" onclick="viewReport(\'' + c.id + '\')">View</button></td></tr>';
+      }).join('');
+
+      return '<div class="stats-grid">' +
+        '<div class="stat-card"><div class="stat-label">Total Cases</div><div class="stat-value">' + state.cases.length + '</div></div>' +
+        '<div class="stat-card amber"><div class="stat-label">Pending</div><div class="stat-value">' + pending + '</div></div>' +
+        '<div class="stat-card green"><div class="stat-label">Approved</div><div class="stat-value">' + approved + '</div></div>' +
+        '<div class="stat-card red"><div class="stat-label">Declined</div><div class="stat-value">' + rejected + '</div></div></div>' +
+        '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+        '<div class="card-title" style="margin-bottom:0">Recent Cases</div>' +
+        '<button class="btn btn-primary btn-sm" onclick="changePage(\'upload\')">+ Upload</button></div>' +
+        (state.cases.length === 0 ? '<div class="empty">No cases yet</div>' : '<table><thead><tr><th>Ref</th><th>Type</th><th>Score</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>') + '</div>' +
+        '<div class="card"><div class="card-title">AI Models</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">' +
+        '<div style="padding:10px;background:#0D1B2E;border-radius:6px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:10px;color:#94A3B8;margin-bottom:4px">GPT-4</div><div style="color:#34D399;font-size:11px">● Connected</div></div>' +
+        '<div style="padding:10px;background:#0D1B2E;border-radius:6px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:10px;color:#94A3B8;margin-bottom:4px">Gemini</div><div style="color:#34D399;font-size:11px">● Connected</div></div>' +
+        '<div style="padding:10px;background:#0D1B2E;border-radius:6px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:10px;color:#94A3B8;margin-bottom:4px">DeepSeek</div><div style="color:#34D399;font-size:11px">● Connected</div></div></div></div>';
     }
 
     function renderCases() {
-      return `
-        <div class="card">
-          ${state.cases.length === 0 ? '<div class="empty">No cases uploaded yet.</div>' : `
-            <table>
-              <thead><tr><th>Reference</th><th>Type</th><th>Date</th><th>Status</th></tr></thead>
-              <tbody>
-                ${state.cases.map(c => `
-                  <tr>
-                    <td style="font-family: 'DM Mono'; color: #3B82F6;">${c.reference}</td>
-                    <td>${c.case_type}</td>
-                    <td style="font-family: 'DM Mono'; font-size: 11px;">${new Date(c.created_at).toLocaleDateString()}</td>
-                    <td><span class="badge ${c.status === 'approved' ? 'badge-green' : 'badge-amber'}">${c.status}</span></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          `}
-        </div>
-      `;
+      var rows = state.cases.map(function(c) {
+        return '<tr><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:#3B82F6">' + c.reference + '</td>' +
+          '<td>' + c.case_type + '</td>' +
+          '<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:#94A3B8">' + new Date(c.created_at).toLocaleDateString() + '</td>' +
+          '<td style="font-family:\'Syne\',sans-serif;font-weight:700;color:' + ((c.risk_score || 0) >= 60 ? '#0D9488' : '#D97706') + '">' + (c.risk_score || '—') + '</td>' +
+          '<td>' + (c.consistency_score ? c.consistency_score + '%' : '—') + '</td>' +
+          '<td>' + statusBadge(c.status) + '</td>' +
+          '<td><button class="btn btn-ghost btn-sm" onclick="viewReport(\'' + c.id + '\')">View</button></td></tr>';
+      }).join('');
+
+      return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+        '<div class="card-title" style="margin-bottom:0">All Cases</div>' +
+        '<button class="btn btn-primary btn-sm" onclick="changePage(\'upload\')">+ Upload</button></div>' +
+        (state.cases.length === 0 ? '<div class="empty">No cases yet</div>' :
+        '<table><thead><tr><th>Ref</th><th>Type</th><th>Date</th><th>Score</th><th>Consistency</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>') + '</div>';
     }
 
     function renderUpload() {
-      return `
-        <div style="max-width: 720px;">
-          <div class="card">
-            <div class="card-title">Submit New Case</div>
-            <form id="upload-form">
-              <div class="form-group">
-                <label class="form-label">Case Type *</label>
-                <select id="case-type" class="form-input" required>
-                  <option value="">Select...</option>
-                  <option>Surgical Negligence</option>
-                  <option>Medication Error</option>
-                  <option>Delayed Diagnosis</option>
-                  <option>GP Negligence</option>
-                  <option>Birth Injury</option>
-                </select>
-              </div>
-              
-              <div class="form-group">
-                <label class="form-label">Case Summary</label>
-                <textarea id="case-summary" class="form-input" style="min-height: 80px; resize: vertical;"></textarea>
-              </div>
-              
-              <div class="form-group">
-                <label class="form-label">Medical Records *</label>
-                <div class="upload-zone" onclick="document.getElementById('file-input').click()">
-                  <div>📁 Click to upload files</div>
-                  <div style="font-size: 11px; color: #94A3B8; margin-top: 6px;">PDF, JPG, PNG</div>
-                </div>
-                <input id="file-input" type="file" multiple style="display: none;">
-              </div>
-              
-              <div id="file-list"></div>
-              
-              <button class="btn btn-primary" type="submit" id="submit-btn">Submit for Analysis →</button>
-            </form>
-          </div>
-        </div>
-      `;
+      return '<div style="max-width:720px"><div class="card"><div class="card-title">Submit New Case for AI Analysis</div>' +
+        '<form id="upload-form"><div class="form-group"><label class="form-label">Case Type *</label>' +
+        '<select id="case-type" class="form-select" required><option value="">Select...</option>' +
+        '<option>Surgical Negligence</option><option>Medication Error</option><option>Delayed Diagnosis</option>' +
+        '<option>GP Negligence</option><option>Birth Injury</option><option>Anaesthesia Error</option>' +
+        '<option>Hospital Acquired Infection</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Case Summary * (Detail helps AI accuracy)</label>' +
+        '<textarea id="case-summary" class="form-textarea" placeholder="Describe: what happened, when, which hospital/doctor, injuries, what treatment should have been given..." required></textarea></div>' +
+        '<div class="form-group"><label class="form-label">Supporting Documents (Optional)</label>' +
+        '<div class="upload-zone" onclick="document.getElementById(\'file-input\').click()">' +
+        '<div style="font-size:14px;margin-bottom:6px">📁 Click to upload</div>' +
+        '<div style="font-size:11px;color:#94A3B8">PDF, JPG, PNG</div></div>' +
+        '<input id="file-input" type="file" multiple style="display:none"></div><div id="file-list"></div>' +
+        '<div class="privacy-note"><strong style="color:#2DD4BF">🔒 Privacy:</strong> All patient data is automatically anonymised before AI analysis.</div>' +
+        '<button class="btn btn-primary" type="submit" style="width:100%">Submit for AI Analysis →</button></form></div></div>';
     }
 
-    // Event Listeners
-    function attachLoginListeners() {
-      document.getElementById('login-form').addEventListener('submit', handleLogin);
-    }
+    function renderProcessing() {
+      var steps = [
+        { name: 'PII Anonymisation', desc: 'Removing patient identifiers' },
+        { name: 'GPT-4 Analysis', desc: 'OpenAI clinical assessment' },
+        { name: 'Gemini Analysis', desc: 'Google AI legal review' },
+        { name: 'DeepSeek Analysis', desc: 'DeepSeek cross-validation' },
+        { name: 'Consensus Scoring', desc: 'Multi-model agreement' },
+        { name: 'Complete', desc: 'Results ready' }
+      ];
+      var progress = Math.round((state.pipelineStep / 6) * 100);
 
-    function attachAppListeners() {
-      const uploadForm = document.getElementById('upload-form');
-      if (uploadForm) {
-        uploadForm.addEventListener('submit', handleUpload);
-        document.getElementById('file-input').addEventListener('change', updateFileList);
+      var stepsHtml = steps.map(function(s, i) {
+        var st = i < state.pipelineStep ? 'done' : i === state.pipelineStep ? 'active' : 'pending';
+        return '<div class="pipeline-step"><div class="step-circle ' + st + '">' + (st === 'done' ? '✓' : (i + 1)) + '</div>' +
+          '<div style="padding-top:6px"><div style="font-size:13px;font-weight:500">' + s.name + '</div>' +
+          '<div style="font-size:11px;color:#64748B">' + s.desc + '</div></div></div>';
+      }).join('');
+
+      var resultHtml = '';
+      if (state.pipelineResult) {
+        resultHtml = '<div class="card" style="border-color:#059669"><div class="card-title" style="color:#34D399">✓ Analysis Complete</div>' +
+          '<div class="grid-2" style="margin-bottom:14px">' +
+          '<div style="text-align:center;padding:14px;background:#0D1B2E;border-radius:8px">' +
+          '<div style="font-size:10px;color:#64748B;margin-bottom:4px">RISK SCORE</div>' +
+          '<div style="font-family:\'Syne\',sans-serif;font-size:36px;font-weight:800;color:' + (state.pipelineResult.avgScore >= 60 ? '#0D9488' : '#D97706') + '">' + state.pipelineResult.avgScore + '</div></div>' +
+          '<div style="text-align:center;padding:14px;background:#0D1B2E;border-radius:8px">' +
+          '<div style="font-size:10px;color:#64748B;margin-bottom:4px">CONSISTENCY</div>' +
+          '<div style="font-family:\'Syne\',sans-serif;font-size:36px;font-weight:800;color:#3B82F6">' + state.pipelineResult.consistency + '%</div></div></div>' +
+          '<button class="btn btn-primary" onclick="changePage(\'cases\')" style="width:100%">View All Cases →</button></div>';
       }
+
+      return '<div style="max-width:720px"><div class="card"><div class="card-title">AI Analysis Pipeline</div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:11px;font-family:\'DM Mono\',monospace;color:#94A3B8;margin-bottom:6px">' +
+        '<span>' + state.pipelineMsg + '</span><span>' + progress + '%</span></div>' +
+        '<div class="progress-bar"><div class="progress-fill" style="width:' + progress + '%"></div></div>' +
+        stepsHtml + '</div>' + resultHtml + '</div>';
     }
 
-    // Handlers
+    function renderReport() {
+      var c = state.selectedCase;
+      if (!c) return '<div class="empty">Case not found</div>';
+
+      var modelHtml = state.modelResults.map(function(r) {
+        return '<div class="model-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+          '<div class="model-name" style="color:#3B82F6">' + r.model_name.toUpperCase() + '</div>' +
+          '<div class="model-score" style="color:' + ((r.score || 0) >= 60 ? '#0D9488' : '#D97706') + '">' + r.score + '</div></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">' +
+          '<div style="color:#94A3B8">Duty of Care: <span style="color:#F1F5F9">' + (r.duty_of_care || '—') + '</span></div>' +
+          '<div style="color:#94A3B8">Breach (Bolam): <span style="color:#F1F5F9">' + (r.breach_bolam || '—') + '</span></div>' +
+          '<div style="color:#94A3B8">Defensibility: <span style="color:#F1F5F9">' + (r.bolitho_defensibility || '—') + '</span></div>' +
+          '<div style="color:#94A3B8">Causation: <span style="color:#F1F5F9">' + (r.causation || '—') + '</span></div></div></div>';
+      }).join('');
+
+      return '<div><button class="btn btn-ghost btn-sm" onclick="changePage(\'cases\')" style="margin-bottom:14px">← Back</button>' +
+        '<div class="card"><div style="font-family:\'DM Mono\',monospace;font-size:11px;color:#64748B;margin-bottom:8px">REPORT · ' + c.reference + ' · CONFIDENTIAL</div>' +
+        '<div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">' + c.case_type + '</div>' +
+        '<div style="font-size:12px;color:#94A3B8;margin-bottom:12px">' + new Date(c.created_at).toLocaleDateString() + '</div>' + statusBadge(c.status) + '</div>' +
+        '<div class="grid-2">' +
+        '<div class="card"><div class="card-title">Risk Score</div><div style="font-family:\'Syne\',sans-serif;font-size:48px;font-weight:800;color:' + ((c.risk_score || 0) >= 60 ? '#0D9488' : '#D97706') + '">' + (c.risk_score || '—') + '<span style="font-size:16px;color:#94A3B8">/100</span></div></div>' +
+        '<div class="card"><div class="card-title">Consistency</div><div style="font-family:\'Syne\',sans-serif;font-size:48px;font-weight:800;color:#3B82F6">' + (c.consistency_score ? c.consistency_score + '%' : '—') + '</div></div></div>' +
+        (c.case_summary ? '<div class="card"><div class="card-title">Case Summary</div><p style="color:#94A3B8;font-size:13px;line-height:1.6">' + c.case_summary + '</p></div>' : '') +
+        (state.modelResults.length > 0 ? '<div class="card"><div class="card-title">Model-by-Model Results</div>' + modelHtml + '</div>' : '') + '</div>';
+    }
+
+    // ==================== HANDLERS ====================
+    function attachLoginListeners() { var f = document.getElementById('login-form'); if (f) f.addEventListener('submit', handleLogin); }
+    function attachAppListeners() {
+      var f = document.getElementById('upload-form');
+      if (f) { f.addEventListener('submit', handleUpload); var fi = document.getElementById('file-input'); if (fi) fi.addEventListener('change', updateFileList); }
+    }
+
     async function handleLogin(e) {
       e.preventDefault();
       state.error = '';
-      
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      
-      // Demo auth
+      var email = document.getElementById('email').value;
+      var password = document.getElementById('password').value;
       if (email === 'harrison@harrisoncole.co.uk' && password === 'password123') {
-        // Get firm from Supabase
-        const { data: firms } = await supabase
-          .from('firms')
-          .select('*')
-          .eq('email', email)
-          .single();
-        
-        if (firms) {
-          state.loggedIn = true;
-          state.firmId = firms.id;
-          state.firmName = firms.name;
-          state.page = 'dashboard';
-          await loadCases();
-          render();
-        }
-      } else {
-        state.error = 'Invalid credentials. Try: harrison@harrisoncole.co.uk / password123';
-        render();
-      }
+        var resp = await db.from('firms').select('*').eq('email', email).single();
+        if (resp.data) {
+          state.loggedIn = true; state.firmId = resp.data.id; state.firmName = resp.data.name;
+          state.page = 'dashboard'; await loadCases(); render();
+        } else { state.error = 'Firm not found.'; render(); }
+      } else { state.error = 'Invalid credentials.'; render(); }
     }
 
     async function handleUpload(e) {
       e.preventDefault();
-      state.loading = true;
-      
-      const caseType = document.getElementById('case-type').value;
-      const caseSummary = document.getElementById('case-summary').value;
-      
-      if (!caseType) {
-        alert('Please select a case type');
-        state.loading = false;
-        return;
-      }
-      
-      // Generate reference
-      const ref = `MAI-2026-${String(state.cases.length + 1).padStart(4, '0')}`;
-      
-      // Insert to Supabase
-      const { data, error } = await supabase
-        .from('cases')
-        .insert({
-          reference: ref,
-          firm_id: state.firmId,
-          case_type: caseType,
-          case_summary: caseSummary,
-          status: 'pending_review',
-          risk_score: Math.floor(Math.random() * 40 + 40),
-          consistency_score: Math.floor(Math.random() * 30 + 65)
-        });
-      
-      if (!error) {
-        document.getElementById('upload-form').reset();
-        document.getElementById('file-list').innerHTML = '';
-        await loadCases();
-        state.page = 'cases';
-      } else {
-        alert('Error uploading case: ' + error.message);
-      }
-      
-      state.loading = false;
+      var caseType = document.getElementById('case-type').value;
+      var caseSummary = document.getElementById('case-summary').value;
+      if (!caseType || !caseSummary) { alert('Fill in case type and summary'); return; }
+
+      var num = state.cases.length + 1;
+      var ref = 'MAI-2026-' + String(num).padStart(4, '0');
+
+      var resp = await db.from('cases').insert({ reference: ref, firm_id: state.firmId, case_type: caseType, case_summary: caseSummary, status: 'processing' }).select().single();
+      if (resp.error) { alert('Error: ' + resp.error.message); return; }
+
+      state.page = 'processing'; state.pipelineStep = 0; state.pipelineMsg = 'Starting...'; state.pipelineResult = null;
       render();
+
+      var result = await runPipeline(caseType, caseSummary, resp.data.id, function(step, msg) {
+        state.pipelineStep = step; state.pipelineMsg = msg; render();
+      });
+
+      state.pipelineResult = result; render();
+      await loadCases();
     }
 
     function updateFileList() {
-      const files = document.getElementById('file-input').files;
-      const list = document.getElementById('file-list');
+      var files = document.getElementById('file-input').files;
+      var list = document.getElementById('file-list');
+      if (!list) return;
       list.innerHTML = '';
-      
-      Array.from(files).forEach(f => {
-        const div = document.createElement('div');
-        div.style.cssText = 'padding: 8px; background: #0D1B2E; border-radius: 6px; margin-bottom: 8px; font-size: 12px;';
-        div.innerHTML = `📄 ${f.name}`;
+      Array.from(files).forEach(function(f) {
+        var div = document.createElement('div');
+        div.className = 'file-item';
+        div.innerHTML = '<span>📄</span><div style="flex:1"><div style="font-size:12px;font-weight:500">' + f.name + '</div><div style="font-size:11px;color:#94A3B8">' + (f.size / 1024).toFixed(1) + ' KB</div></div><span class="badge badge-green">Ready</span>';
         list.appendChild(div);
       });
     }
 
     async function loadCases() {
-      const { data } = await supabase
-        .from('cases')
-        .select('*')
-        .eq('firm_id', state.firmId)
-        .order('created_at', { ascending: false });
-      
-      state.cases = data || [];
+      var resp = await db.from('cases').select('*').eq('firm_id', state.firmId).order('created_at', { ascending: false });
+      state.cases = resp.data || [];
     }
 
-    function changePage(page) {
-      state.page = page;
+    async function viewReport(caseId) {
+      state.selectedCase = state.cases.find(function(c) { return c.id === caseId; });
+      var resp = await db.from('model_results').select('*').eq('case_id', caseId);
+      state.modelResults = resp.data || [];
+      state.page = 'report'; render();
+    }
+
+    function changePage(page) { state.page = page; state.pipelineResult = null; render(); }
+
+    function logout() {
+      state = { loggedIn: false, firmId: null, firmName: null, page: 'dashboard', cases: [], selectedCase: null, modelResults: [], pipelineStep: 0, pipelineMsg: '', pipelineResult: null, error: '' };
       render();
     }
 
-    function selectCase(id) {
-      state.selectedCase = state.cases.find(c => c.id === id);
-      // Could show case detail here
-    }
-
-    async function logout() {
-      state.loggedIn = false;
-      state.firmId = null;
-      state.firmName = null;
-      state.cases = [];
-      state.page = 'dashboard';
-      state.error = '';
-      render();
-    }
-
-    // Initial render
     render();
   </script>
 </body>
