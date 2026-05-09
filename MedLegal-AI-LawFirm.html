@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MedLegal-AI - Law Firm Portal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0D1B2E;color:#F1F5F9;font-family:'DM Sans',sans-serif}
@@ -128,7 +129,7 @@ function renderReport(){
   var c=state.selectedCase;if(!c)return '<div class="empty">Not found</div>';
   var msg='';
   if(c.status==='pending_review') msg='<div class="card"><div class="card-title">⏳ Under Expert Review</div><p style="color:#94A3B8;font-size:13px;line-height:1.6">Your case is being reviewed by our expert panel (qualified MD and Lawyer). You will receive a signed report within 24-48 hours.</p></div>';
-  else if(c.status==='approved') msg='<div class="card" style="border-color:#059669"><div class="card-title" style="color:#34D399">✓ Expert Report Ready</div><p style="color:#94A3B8;font-size:13px;margin-bottom:14px">Your case has been reviewed and approved. Download the full signed report below.</p><button class="btn btn-primary">📥 Download Expert Report (PDF)</button></div>';
+  else if(c.status==='approved') msg='<div class="card" style="border-color:#059669"><div class="card-title" style="color:#34D399">✓ Expert Report Ready</div><p style="color:#94A3B8;font-size:13px;margin-bottom:14px">Your case has been reviewed and approved. Download the full signed report below.</p><button class="btn btn-primary" onclick="downloadReport(\''+c.id+'\')">📥 Download Expert Report (PDF)</button></div>';
   else if(c.status==='rejected') msg='<div class="card" style="border-color:#DC2626"><div class="card-title" style="color:#F87171">✕ Not Recommended</div><p style="color:#94A3B8;font-size:13px">After expert review, this case does not have sufficient merit to proceed. Contact us to discuss further.</p></div>';
   return '<div><button class="btn btn-ghost btn-sm" onclick="changePage(\'cases\')" style="margin-bottom:14px">← Back</button><div class="card"><div style="font-family:\'DM Mono\',monospace;font-size:11px;color:#64748B;margin-bottom:8px">CASE · '+c.reference+'</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">'+c.case_type+'</div><div style="font-size:12px;color:#94A3B8;margin-bottom:12px">Submitted: '+new Date(c.created_at).toLocaleDateString()+'</div>'+sBadge(c.status)+'</div>'+msg+'</div>';
 }
@@ -145,6 +146,133 @@ function updateFileList(){var files=document.getElementById('file-input').files,
 async function loadCases(){var r=await db.from('cases').select('*').eq('firm_id',state.firmId).order('created_at',{ascending:false});state.cases=r.data||[];}
 async function viewReport(id){state.selectedCase=state.cases.find(function(c){return c.id===id;});state.page='report';render();}
 function changePage(p){state.page=p;state.pipelineResult=null;render();}
+
+async function downloadReport(caseId){
+  var c=state.cases.find(function(x){return x.id===caseId;});
+  if(!c)return alert('Case not found');
+  
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF('p','mm','a4');
+  var w=210,margin=20,y=20,lw=w-2*margin;
+  
+  // Colors
+  var blue=[43,108,176],dark=[13,27,46],teal=[13,148,136];
+  
+  // Header bar
+  doc.setFillColor(dark[0],dark[1],dark[2]);
+  doc.rect(0,0,w,40,'F');
+  doc.setFillColor(blue[0],blue[1],blue[2]);
+  doc.rect(0,38,w,2,'F');
+  
+  // Logo
+  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(241,245,249);
+  doc.text('MedLegal-AI',margin,28);
+  doc.setFontSize(8);doc.setTextColor(148,163,184);
+  doc.text('CLINICAL NEGLIGENCE TRIAGE REPORT',margin+55,28);
+  
+  // Confidential badge
+  doc.setFontSize(7);doc.setTextColor(220,38,38);
+  doc.text('CONFIDENTIAL',w-margin-25,28);
+  
+  y=50;
+  
+  // Report Info Box
+  doc.setFillColor(242,244,247);doc.rect(margin,y,lw,28,'F');
+  doc.setDrawColor(200,200,200);doc.rect(margin,y,lw,28,'S');
+  doc.setFontSize(9);doc.setTextColor(100,116,139);doc.setFont('helvetica','normal');
+  doc.text('Report Reference:',margin+4,y+7);doc.text('Case Type:',margin+4,y+14);doc.text('Date:',margin+4,y+21);doc.text('Status:',margin+90,y+7);
+  doc.setFont('helvetica','bold');doc.setTextColor(30,41,59);
+  doc.text(c.reference,margin+40,y+7);doc.text(c.case_type,margin+40,y+14);doc.text(new Date(c.created_at).toLocaleDateString('en-GB'),margin+40,y+21);
+  doc.setTextColor(5,150,105);doc.text('APPROVED',margin+105,y+7);
+  
+  y+=36;
+  
+  // Section: Expert Assessment
+  doc.setFillColor(blue[0],blue[1],blue[2]);doc.rect(margin,y,lw,7,'F');
+  doc.setFontSize(10);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
+  doc.text('EXPERT ASSESSMENT',margin+4,y+5);
+  y+=12;
+  
+  doc.setFontSize(10);doc.setTextColor(30,41,59);doc.setFont('helvetica','normal');
+  var expertText=c.expert_notes||'This case has been reviewed and approved by our expert panel.';
+  var lines=doc.splitTextToSize(expertText,lw-8);
+  doc.text(lines,margin+4,y);
+  y+=lines.length*5+8;
+  
+  // Section: Recommendation
+  doc.setFillColor(blue[0],blue[1],blue[2]);doc.rect(margin,y,lw,7,'F');
+  doc.setFontSize(10);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
+  doc.text('RECOMMENDATION',margin+4,y+5);
+  y+=12;
+  
+  var rec=c.expert_notes||'Proceed to Expert Report';
+  if(rec.toLowerCase().indexOf('proceed')>=0||rec.toLowerCase().indexOf('approved')>=0){
+    doc.setTextColor(5,150,105);doc.setFont('helvetica','bold');doc.setFontSize(12);
+    doc.text('✓ RECOMMENDED TO PROCEED',margin+4,y);
+    y+=8;doc.setFontSize(9);doc.setTextColor(100,116,139);doc.setFont('helvetica','normal');
+    doc.text('Based on expert analysis, this case has sufficient merit to proceed to a full expert assessment.',margin+4,y);
+  } else {
+    doc.setTextColor(217,119,6);doc.setFont('helvetica','bold');doc.setFontSize(12);
+    doc.text('BORDERLINE - FURTHER CONSIDERATION ADVISED',margin+4,y);
+  }
+  y+=14;
+  
+  // Section: Methodology
+  doc.setFillColor(blue[0],blue[1],blue[2]);doc.rect(margin,y,lw,7,'F');
+  doc.setFontSize(10);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
+  doc.text('METHODOLOGY',margin+4,y+5);
+  y+=12;
+  
+  doc.setFontSize(9);doc.setTextColor(100,116,139);doc.setFont('helvetica','normal');
+  var methLines=[
+    'This report was generated using the MedLegal-AI clinical negligence triage platform.',
+    'The case was assessed against the following UK legal frameworks:',
+    '',
+    '  • Bolam Test - Whether the treatment met the standard of a responsible body of medical opinion',
+    '  • Bolitho Principle - Whether the medical opinion relied upon is logically defensible',
+    '  • Duty of Care - Establishment of doctor-patient relationship',
+    '  • Causation - Application of the "but-for" test',
+    '',
+    'Multiple AI models independently analysed the case, and results were cross-validated',
+    'for consistency. An expert (qualified MD and Lawyer) reviewed all outputs before',
+    'issuing this signed report.'
+  ];
+  methLines.forEach(function(line){doc.text(line,margin+4,y);y+=5;});
+  y+=6;
+  
+  // Expert Signature
+  doc.setDrawColor(200,200,200);doc.line(margin,y,margin+lw,y);
+  y+=10;
+  doc.setFontSize(10);doc.setTextColor(30,41,59);doc.setFont('helvetica','bold');
+  doc.text('Dr. H. Yilmaz',margin+4,y);
+  y+=5;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(100,116,139);
+  doc.text('MD, LLB (Bar-Registered Lawyer), Forensic Scientist',margin+4,y);
+  y+=5;doc.text('MedLegal-AI Expert Panel',margin+4,y);
+  y+=5;doc.text('Date: '+new Date().toLocaleDateString('en-GB'),margin+4,y);
+  
+  y+=14;
+  
+  // Disclaimer
+  doc.setDrawColor(200,200,200);doc.line(margin,y,margin+lw,y);y+=6;
+  doc.setFontSize(7);doc.setTextColor(148,163,184);
+  var disc=[
+    'DISCLAIMER: This report is a pre-screening assessment and does not constitute formal legal or medical advice.',
+    'It is intended to assist in the initial triage of potential clinical negligence claims. A full expert report by',
+    'an independent medical expert is required before commencing formal proceedings. MedLegal-AI operates as a',
+    'decision-support tool and all outputs are subject to expert human review and sign-off.',
+    '',
+    '© '+new Date().getFullYear()+' MedLegal-AI. All rights reserved. This document is confidential and intended solely',
+    'for the use of the instructing law firm.'
+  ];
+  disc.forEach(function(line){doc.text(line,margin+4,y);y+=4;});
+  
+  // Footer bar
+  doc.setFillColor(dark[0],dark[1],dark[2]);doc.rect(0,287,w,10,'F');
+  doc.setFontSize(7);doc.setTextColor(148,163,184);
+  doc.text('MedLegal-AI | Clinical Negligence Triage Platform | '+c.reference,margin,293);
+  
+  doc.save('MedLegal-AI-Report-'+c.reference+'.pdf');
+}
 function logout(){state={loggedIn:false,firmId:null,firmName:null,page:'dashboard',cases:[],selectedCase:null,pipelineStep:0,pipelineMsg:'',pipelineResult:null,error:''};render();}
 render();
 </script>
