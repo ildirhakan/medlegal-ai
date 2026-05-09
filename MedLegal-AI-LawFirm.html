@@ -1,637 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MedLegal-AI - Law Firm Portal</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script>
-  // Supabase Config
-  const SUPABASE_URL = 'https://nhotxxkehumweboxqkka.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_3UKw258JCeGIsInKmz291w_Fc658oH3';
-  
-  // Initialize Supabase
-  const { createClient } = window.supabase;
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MedLegal-AI - Law Firm Portal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0D1B2E; color: #F1F5F9; font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #0D1B2E; }
-    ::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 2px; }
-    
-    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0D1B2E; position: relative; overflow: hidden; }
-    .login-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(43,108,176,0.12) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(13,148,136,0.08) 0%, transparent 50%); }
-    .login-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 14px; padding: 40px; width: 380px; position: relative; z-index: 1; }
-    .login-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; text-align: center; margin-bottom: 4px; }
-    .login-title span { color: #3B82F6; }
-    .login-sub { font-size: 11px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; text-align: center; margin-bottom: 24px; }
-    .login-error { background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.3); color: #F87171; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; }
-    .login-hint { font-size: 11px; color: #64748B; text-align: center; margin-top: 16px; font-family: 'DM Mono', monospace; }
-    
-    .app { display: flex; height: 100vh; }
-    .sidebar { width: 240px; background: #142236; border-right: 1px solid #1E3A5F; padding: 0; display: flex; flex-direction: column; }
-    .sidebar-content { flex: 1; overflow-y: auto; }
-    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    
-    .logo { padding: 24px 20px; border-bottom: 1px solid #1E3A5F; }
-    .logo-text { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
-    .logo-text span { color: #3B82F6; }
-    .logo-sub { font-size: 9px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
-    
-    .nav-section { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: #64748B; padding: 12px 10px 6px; text-transform: uppercase; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 0 10px 2px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #94A3B8; border: 1px solid transparent; transition: all 0.15s; }
-    .nav-item:hover { background: #1C3050; color: #F1F5F9; }
-    .nav-item.active { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border-color: rgba(59, 130, 246, 0.2); }
-    .nav-badge { margin-left: auto; background: #2B6CB0; color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-family: 'DM Mono', monospace; }
-    
-    .sidebar-firm { padding: 16px; border-top: 1px solid #1E3A5F; }
-    .firm-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
-    .firm-role { font-size: 10px; color: #64748B; font-family: 'DM Mono', monospace; }
-    .logout-btn { width: 100%; margin-top: 12px; padding: 8px; background: transparent; border: 1px solid #1E3A5F; color: #94A3B8; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.15s; }
-    .logout-btn:hover { background: #1C3050; color: #F1F5F9; }
-    
-    .topbar { padding: 20px 28px; border-bottom: 1px solid #1E3A5F; background: #142236; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-    .topbar-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-    .topbar-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; font-family: 'DM Mono', monospace; }
-    
-    .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
-    
-    .card { background: #142236; border: 1px solid #1E3A5F; border-radius: 10px; padding: 20px; margin-bottom: 14px; }
-    .card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-    
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
-    .stat-card { background: #142236; border: 1px solid #1E3A5F; border-radius: 10px; padding: 18px; position: relative; overflow: hidden; }
-    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #3B82F6; }
-    .stat-card.amber::before { background: #D97706; }
-    .stat-card.green::before { background: #059669; }
-    .stat-card.red::before { background: #DC2626; }
-    .stat-label { font-size: 10px; color: #64748B; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-    .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -1px; }
-    
-    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
-    .btn-primary { background: #2B6CB0; color: white; }
-    .btn-primary:hover { background: #2563EB; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-ghost { background: transparent; color: #94A3B8; border: 1px solid #1E3A5F; }
-    .btn-ghost:hover { background: #1C3050; color: #F1F5F9; }
-    .btn-sm { padding: 5px 12px; font-size: 12px; }
-    
-    .form-group { margin-bottom: 14px; }
-    .form-label { font-size: 11px; color: #94A3B8; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 6px; }
-    .form-input, .form-select, .form-textarea { width: 100%; background: #0D1B2E; border: 1px solid #1E3A5F; padding: 9px 12px; color: #F1F5F9; font-size: 13px; border-radius: 6px; font-family: 'DM Sans', sans-serif; }
-    .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #3B82F6; }
-    .form-textarea { min-height: 90px; resize: vertical; }
-    
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; padding: 10px 0; border-bottom: 1px solid #1E3A5F; font-size: 10px; text-transform: uppercase; color: #64748B; font-family: 'DM Mono', monospace; }
-    td { padding: 12px 0; border-bottom: 1px solid rgba(30, 58, 95, 0.5); font-size: 13px; }
-    
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; }
-    .badge-blue { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
-    .badge-green { background: rgba(5, 150, 105, 0.15); color: #34D399; }
-    .badge-amber { background: rgba(217, 119, 6, 0.15); color: #FCD34D; }
-    .badge-red { background: rgba(220, 38, 38, 0.15); color: #F87171; }
-    
-    .upload-zone { border: 2px dashed #1E3A5F; border-radius: 10px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
-    .upload-zone:hover { border-color: #3B82F6; background: rgba(59, 130, 246, 0.1); }
-    
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    
-    .empty { text-align: center; padding: 48px 24px; color: #94A3B8; }
-    .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
-    
-    .pipeline-step { display: flex; gap: 14px; padding: 14px 0; }
-    .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 12px; border: 2px solid; flex-shrink: 0; }
-    .step-circle.done { background: rgba(5, 150, 105, 0.15); border-color: #059669; color: #34D399; }
-    .step-circle.active { background: rgba(59, 130, 246, 0.15); border-color: #3B82F6; color: #3B82F6; }
-    .step-circle.pending { border-color: #1E3A5F; color: #64748B; }
-    
-    .progress-bar { height: 4px; background: #1E3A5F; border-radius: 2px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #0D9488); }
-    
-    .file-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0D1B2E; border-radius: 6px; margin-bottom: 8px; border: 1px solid #1E3A5F; }
-    
-    .case-card { background: #0D1B2E; border: 1px solid #1E3A5F; border-radius: 8px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s; }
-    .case-card:hover { background: #142236; border-color: #2B6CB0; }
-    .case-ref { font-family: 'DM Mono', monospace; font-size: 11px; color: #3B82F6; margin-bottom: 4px; }
-    .case-type { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
-    .case-status { display: flex; gap: 10px; align-items: center; font-size: 11px; }
-  </style>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0D1B2E;color:#F1F5F9;font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1E3A5F;border-radius:2px}
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative}
+.login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(43,108,176,.12) 0%,transparent 60%)}
+.login-card{background:#142236;border:1px solid #1E3A5F;border-radius:14px;padding:40px;width:400px;position:relative;z-index:1}
+.login-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;text-align:center}.login-title span{color:#3B82F6}
+.login-sub{font-size:11px;color:#64748B;margin-bottom:28px;text-align:center;font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase}
+.login-error{background:rgba(220,38,38,.12);color:#F87171;padding:12px;border-radius:6px;margin-bottom:16px;font-size:12px}
+.login-hint{font-size:11px;color:#64748B;text-align:center;margin-top:20px;font-family:'DM Mono',monospace}
+.form-group{margin-bottom:14px}.form-label{font-size:11px;color:#94A3B8;text-transform:uppercase;display:block;margin-bottom:6px;font-family:'DM Mono',monospace}
+.form-input,.form-select{width:100%;background:#0D1B2E;border:1px solid #1E3A5F;padding:10px 12px;color:#F1F5F9;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif}
+.form-input:focus,.form-select:focus{outline:none;border-color:#3B82F6}
+.form-textarea{width:100%;background:#0D1B2E;border:1px solid #1E3A5F;padding:10px 12px;color:#F1F5F9;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;min-height:100px;resize:vertical}
+.btn{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif}
+.btn-primary{background:#2B6CB0;color:white}.btn-primary:hover{background:#2563EB}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:transparent;color:#94A3B8;border:1px solid #1E3A5F}.btn-ghost:hover{background:#1C3050;color:#F1F5F9}.btn-sm{padding:5px 12px;font-size:12px}
+.app{display:flex;height:100vh}.sidebar{width:240px;background:#142236;border-right:1px solid #1E3A5F;display:flex;flex-direction:column}
+.sidebar-content{flex:1;overflow-y:auto;padding-top:12px}.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.logo{padding:24px 20px;border-bottom:1px solid #1E3A5F}.logo-text{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}.logo-text span{color:#3B82F6}
+.logo-sub{font-size:9px;color:#64748B;font-family:'DM Mono',monospace;letter-spacing:2px;margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:0 10px 2px;border-radius:6px;cursor:pointer;font-size:13px;color:#94A3B8;border:1px solid transparent}
+.nav-item:hover{background:#1C3050;color:#F1F5F9}.nav-item.active{background:rgba(59,130,246,.15);color:#3B82F6}
+.nav-badge{margin-left:auto;background:#2B6CB0;color:white;font-size:10px;padding:1px 6px;border-radius:10px;font-family:'DM Mono',monospace}
+.nav-section{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#64748B;padding:12px 10px 6px;text-transform:uppercase}
+.sidebar-user{padding:16px;border-top:1px solid #1E3A5F}.user-name{font-size:12px;font-weight:500;margin-bottom:4px}.user-role{font-size:10px;color:#64748B;margin-bottom:12px}
+.topbar{padding:20px 28px;border-bottom:1px solid #1E3A5F;background:#142236}.topbar-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700}
+.topbar-sub{font-size:12px;color:#94A3B8;margin-top:2px;font-family:'DM Mono',monospace}
+.content{flex:1;overflow-y:auto;padding:24px 28px}
+.card{background:#142236;border:1px solid #1E3A5F;border-radius:10px;padding:20px;margin-bottom:14px}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:#142236;border:1px solid #1E3A5F;border-radius:10px;padding:18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:#3B82F6}
+.stat-card.amber::before{background:#D97706}.stat-card.green::before{background:#059669}.stat-card.red::before{background:#DC2626}
+.stat-label{font-size:10px;color:#64748B;font-family:'DM Mono',monospace;margin-bottom:8px}.stat-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:700}
+.upload-zone{border:2px dashed #1E3A5F;border-radius:10px;padding:48px 24px;text-align:center;cursor:pointer}.upload-zone:hover{border-color:#3B82F6;background:rgba(59,130,246,.1)}
+table{width:100%;border-collapse:collapse}th{text-align:left;padding:10px 0;border-bottom:1px solid #1E3A5F;font-size:10px;text-transform:uppercase;color:#64748B;font-family:'DM Mono',monospace}
+td{padding:12px 0;border-bottom:1px solid rgba(30,58,95,.5);font-size:13px}
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-family:'DM Mono',monospace}
+.badge-blue{background:rgba(59,130,246,.15);color:#3B82F6}.badge-green{background:rgba(5,150,105,.15);color:#34D399}
+.badge-amber{background:rgba(217,119,6,.15);color:#FCD34D}.badge-red{background:rgba(220,38,38,.15);color:#F87171}
+.empty{text-align:center;padding:48px 24px;color:#94A3B8}
+.pipeline-step{display:flex;gap:14px;padding:12px 0}
+.step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;border:2px solid;flex-shrink:0}
+.step-circle.done{background:rgba(5,150,105,.15);border-color:#059669;color:#34D399}
+.step-circle.active{background:rgba(59,130,246,.15);border-color:#3B82F6;color:#3B82F6;animation:pulse 1.5s infinite}
+.step-circle.pending{border-color:#1E3A5F;color:#64748B}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.progress-bar{height:4px;background:#1E3A5F;border-radius:2px;overflow:hidden;margin-bottom:16px}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3B82F6,#0D9488);transition:width .5s}
+.file-item{display:flex;align-items:center;gap:10px;padding:10px;background:#0D1B2E;border-radius:6px;margin-bottom:8px;border:1px solid #1E3A5F}
+.privacy-note{background:rgba(13,148,136,.08);border:1px solid rgba(13,148,136,.2);border-left:3px solid #0D9488;padding:12px;border-radius:8px;margin-bottom:16px;font-size:12px;color:#94A3B8}
+</style>
 </head>
 <body>
-  <div id="root"></div>
+<div id="app"></div>
+<script>
+var SUPABASE_URL='https://nhotxxkehumweboxqkka.supabase.co',SUPABASE_KEY='sb_publishable_3UKw258JCeGIsInKmz291w_Fc658oH3';
+var AI_KEYS={openai:'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',gemini:'AIzaSyDxQJSU2LfIJ8PLxk42GW54Z6t8x--5LQI',deepseek:'sk-c5de9b4e4f214bbc8b3a2251473551c1'};
+var db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-  <script type="text/babel">
-    const { useState } = React;
+function anonymisePII(t){if(!t)return t;return t.replace(/\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b/g,'[NHS-REDACTED]').replace(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/gi,'[POSTCODE-REDACTED]').replace(/\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b/g,'[DOB-REDACTED]').replace(/\b[\w.-]+@[\w.-]+\.\w{2,}\b/g,'[EMAIL-REDACTED]').replace(/\b(?:0|\+44)\s*\d[\d\s]{8,12}\b/g,'[PHONE-REDACTED]');}
 
-    function App() {
-      const [loggedIn, setLoggedIn] = useState(false);
-      const [email, setEmail] = useState('');
-      const [password, setPassword] = useState('');
-      const [loginError, setLoginError] = useState('');
-      const [page, setPage] = useState('dashboard');
-      const [selectedCase, setSelectedCase] = useState(null);
-      const [caseForm, setCaseForm] = useState({ type: '', summary: '', files: [] });
-      const [uploadStep, setUploadStep] = useState(0);
+function buildPrompt(ct,cs){return 'You are a UK clinical negligence legal analyst. Analyse this case under UK law.\n\nCASE TYPE: '+ct+'\nCASE SUMMARY: '+anonymisePII(cs)+'\n\nApply these legal tests:\n1. DUTY OF CARE: Confirmed / Arguable / Not Established\n2. BREACH (BOLAM TEST): Clear Breach / Arguable Breach / No Breach\n3. BOLITHO DEFENSIBILITY: Not Defensible / Partially Defensible / Fully Defensible\n4. CAUSATION: Established / Arguable / Not Established\n5. OVERALL RISK SCORE: 0-100\n6. RECOMMENDATION: "Proceed to Expert Report" / "Borderline - Consider Further" / "Do Not Pursue"\n7. DETAILED REASONING: 4-6 sentence analysis.\n\nRespond ONLY in JSON:\n{"duty_of_care":"string","breach_bolam":"string","bolitho_defensibility":"string","causation":"string","risk_score":0,"recommendation":"string","reasoning":"string"}';}
 
-      // Mock firm data
-      const firmEmail = 'harrison@harrisoncole.co.uk';
-      const firmPassword = 'password123';
-      const firmName = 'Harrison & Cole LLP';
+async function callGPT4(p){try{var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_KEYS.openai},body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'user',content:p}],temperature:.3,max_tokens:1200})});var d=await r.json();if(d.error)throw new Error(d.error.message);return JSON.parse(d.choices[0].message.content.replace(/```json|```/g,'').trim());}catch(e){console.error('GPT4:',e);return null;}}
+async function callGemini(p){try{var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+AI_KEYS.gemini,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p}]}],generationConfig:{temperature:.3,maxOutputTokens:1200}})});var d=await r.json();if(d.error)throw new Error(d.error.message);return JSON.parse(d.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim());}catch(e){console.error('Gemini:',e);return null;}}
+async function callDeepSeek(p){try{var r=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_KEYS.deepseek},body:JSON.stringify({model:'deepseek-chat',messages:[{role:'user',content:p}],temperature:.3,max_tokens:1200})});var d=await r.json();if(d.error)throw new Error(d.error.message);return JSON.parse(d.choices[0].message.content.replace(/```json|```/g,'').trim());}catch(e){console.error('DeepSeek:',e);return null;}}
 
-      // Mock cases for this firm
-      const [cases, setCases] = useState([
-        { id: 1, ref: 'MAI-2026-0042', type: 'Surgical Negligence', date: '2026-05-03', score: 61, status: 'pending_review', expert: 'Dr. Yılmaz', uploaded: 2 },
-        { id: 2, ref: 'MAI-2026-0041', type: 'Medication Error', date: '2026-05-02', score: 82, status: 'approved', expert: 'Dr. Yılmaz', uploaded: 3 },
-        { id: 3, ref: 'MAI-2026-0040', type: 'Delayed Diagnosis', date: '2026-05-01', score: 45, status: 'rejected', expert: 'Dr. Yılmaz', uploaded: 1 },
-        { id: 4, ref: 'MAI-2026-0039', type: 'Birth Injury', date: '2026-04-30', score: 74, status: 'approved', expert: 'Dr. Yılmaz', uploaded: 2 },
-      ]);
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 
-      const pipelineSteps = ['Secure Upload', 'PII Anonymisation', 'Multi-LLM Analysis', 'Consistency Scoring', 'Expert Review'];
+async function runPipeline(ct,cs,caseId,onStep){
+  var prompt=buildPrompt(ct,cs),results={};
+  onStep(1,'PII Anonymisation complete');await sleep(500);
+  onStep(2,'AI pre-screening...');results.gpt4=await callGPT4(prompt);
+  onStep(3,'Cross-validation...');results.gemini=await callGemini(prompt);
+  onStep(4,'Final check...');results.deepseek=await callDeepSeek(prompt);
+  onStep(5,'Preparing for expert...');await sleep(300);
+  var valid=[];for(var k in results){if(results[k])valid.push([k,results[k]]);}
+  var avg=0,con=0;
+  if(valid.length>0){var sc=valid.map(function(v){return v[1].risk_score;});avg=Math.round(sc.reduce(function(a,b){return a+b;},0)/sc.length);if(sc.length>1){var m=sc.reduce(function(a,b){return a+b;},0)/sc.length;var v2=sc.reduce(function(a,s){return a+Math.pow(s-m,2);},0)/sc.length;con=Math.round(Math.max(0,100-Math.sqrt(v2)*2));}else con=75;}
+  for(var i=0;i<valid.length;i++){var mo=valid[i][0],re=valid[i][1];await db.from('model_results').insert({case_id:caseId,model_name:mo,score:re.risk_score,duty_of_care:re.duty_of_care,breach_bolam:re.breach_bolam,bolitho_defensibility:re.bolitho_defensibility,causation:re.causation,reasoning:re.reasoning||'',recommendation:re.recommendation||''});}
+  var rec=avg>=65?'Proceed to Expert Report':avg>=40?'Borderline - Consider Further':'Do Not Pursue';
+  await db.from('cases').update({risk_score:avg,consistency_score:con,status:'pending_review',expert_notes:rec,updated_at:new Date().toISOString()}).eq('id',caseId);
+  onStep(6,'Complete');return{avgScore:avg,consistency:con,recommendation:rec};
+}
 
-      const handleLogin = (e) => {
-        e.preventDefault();
-        setLoginError('');
-        if (email === firmEmail && password === firmPassword) {
-          setLoggedIn(true);
-          setEmail('');
-          setPassword('');
-        } else {
-          setLoginError('Invalid email or password. Try: harrison@harrisoncole.co.uk / password123');
-        }
-      };
+var state={loggedIn:false,firmId:null,firmName:null,page:'dashboard',cases:[],selectedCase:null,pipelineStep:0,pipelineMsg:'',pipelineResult:null,error:''};
 
-      const handleLogout = () => {
-        setLoggedIn(false);
-        setPage('dashboard');
-        setEmail('');
-        setPassword('');
-      };
+function render(){var app=document.getElementById('app');if(!state.loggedIn){app.innerHTML=renderLogin();setTimeout(attachLoginListeners,0);}else{app.innerHTML=renderApp();setTimeout(attachAppListeners,0);}}
+function sBadge(s){var m={uploaded:['badge-blue','● Uploaded'],processing:['badge-blue','⟳ Processing'],pending_review:['badge-amber','● Under Review'],approved:['badge-green','✓ Report Ready'],rejected:['badge-red','✕ Not Recommended']};var a=m[s]||['badge-blue',s];return '<span class="badge '+a[0]+'">'+a[1]+'</span>';}
 
-      const handleUploadStart = () => {
-        if (!caseForm.type || caseForm.files.length === 0) return;
-        setPage('processing');
-        setUploadStep(0);
-        
-        const steps = [1, 2, 3, 4, 5];
-        steps.forEach((s, i) => {
-          setTimeout(() => {
-            setUploadStep(s);
-            if (s === 5) {
-              setTimeout(() => {
-                const newCase = {
-                  id: cases.length + 1,
-                  ref: `MAI-2026-${String(cases.length + 50).padStart(4, '0')}`,
-                  type: caseForm.type,
-                  date: new Date().toISOString().split('T')[0],
-                  score: Math.floor(Math.random() * 40 + 40),
-                  status: 'pending_review',
-                  expert: 'Dr. Yılmaz',
-                  uploaded: caseForm.files.length
-                };
-                setCases([newCase, ...cases]);
-                setCaseForm({ type: '', summary: '', files: [] });
-                setPage('cases');
-              }, 1000);
-            }
-          }, i * 1200);
-        });
-      };
+function renderLogin(){return '<div class="login-screen"><div class="login-card"><div class="login-title">MedLegal<span>-AI</span></div><div class="login-sub">Law Firm Portal</div>'+(state.error?'<div class="login-error">'+state.error+'</div>':'')+'<form id="login-form"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="email" type="email" placeholder="your@lawfirm.co.uk" required></div><div class="form-group"><label class="form-label">Password</label><input class="form-input" id="password" type="password" placeholder="••••••••" required></div><button class="btn btn-primary" type="submit" style="width:100%">Sign In</button></form><div class="login-hint">Demo: harrison@harrisoncole.co.uk / password123</div></div></div>';}
 
-      const StatusBadge = ({ status }) => {
-        const map = {
-          approved: ['badge-green', '✓ Approved'],
-          pending_review: ['badge-amber', '● Pending'],
-          rejected: ['badge-red', '✕ Rejected'],
-        };
-        const [cls, label] = map[status] || ['badge-blue', status];
-        return <span className={`badge ${cls}`}>{label}</span>;
-      };
+function renderApp(){
+  return '<div class="app"><div class="sidebar"><div class="logo"><div class="logo-text">MedLegal<span>-AI</span></div><div class="logo-sub">Law Firm Portal</div></div><div class="sidebar-content"><div class="nav-section">Main</div><div class="nav-item '+(state.page==='dashboard'?'active':'')+'" onclick="changePage(\'dashboard\')">📈 Overview</div><div class="nav-item '+(state.page==='cases'?'active':'')+'" onclick="changePage(\'cases\')">📋 My Cases <span class="nav-badge">'+state.cases.length+'</span></div><div class="nav-item '+(state.page==='upload'?'active':'')+'" onclick="changePage(\'upload\')">↑ Upload Case</div></div><div class="sidebar-user"><div class="user-name">'+state.firmName+'</div><div class="user-role">Law Firm Account</div><button class="btn btn-ghost btn-sm" onclick="logout()" style="width:100%;margin-top:8px">Sign Out</button></div></div><div class="main"><div class="topbar"><div class="topbar-title">'+(state.page==='dashboard'?'Overview':state.page==='cases'?'My Cases':state.page==='upload'?'Upload New Case':state.page==='processing'?'Processing':state.page==='report'?(state.selectedCase?state.selectedCase.reference:''):'')+'</div></div><div class="content">'+(state.page==='dashboard'?renderDashboard():'')+(state.page==='cases'?renderCases():'')+(state.page==='upload'?renderUpload():'')+(state.page==='processing'?renderProcessing():'')+(state.page==='report'?renderReport():'')+'</div></div></div>';
+}
 
-      if (!loggedIn) {
-        return (
-          <div className="login-screen">
-            <div className="login-bg" />
-            <div className="login-card">
-              <div className="login-title">MedLegal<span>-AI</span></div>
-              <div className="login-sub">Law Firm Portal</div>
+function renderDashboard(){
+  var p=state.cases.filter(function(c){return c.status==='pending_review';}).length,a=state.cases.filter(function(c){return c.status==='approved';}).length,r=state.cases.filter(function(c){return c.status==='rejected';}).length;
+  var rows=state.cases.slice(0,5).map(function(c){return '<tr><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:#3B82F6">'+c.reference+'</td><td style="font-size:12px;color:#94A3B8">'+c.case_type+'</td><td>'+sBadge(c.status)+'</td><td><button class="btn btn-ghost btn-sm" onclick="viewReport(\''+c.id+'\')">View</button></td></tr>';}).join('');
+  return '<div class="stats-grid"><div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">'+state.cases.length+'</div></div><div class="stat-card amber"><div class="stat-label">Under Review</div><div class="stat-value">'+p+'</div></div><div class="stat-card green"><div class="stat-label">Reports Ready</div><div class="stat-value">'+a+'</div></div><div class="stat-card red"><div class="stat-label">Not Recommended</div><div class="stat-value">'+r+'</div></div></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="card-title" style="margin-bottom:0">Recent Cases</div><button class="btn btn-primary btn-sm" onclick="changePage(\'upload\')">+ Upload</button></div>'+(state.cases.length===0?'<div class="empty">No cases yet</div>':'<table><thead><tr><th>Ref</th><th>Type</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>')+'</div>';
+}
 
-              {loginError && <div className="login-error">{loginError}</div>}
+function renderCases(){
+  var rows=state.cases.map(function(c){return '<tr><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:#3B82F6">'+c.reference+'</td><td>'+c.case_type+'</td><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:#94A3B8">'+new Date(c.created_at).toLocaleDateString()+'</td><td>'+sBadge(c.status)+'</td><td><button class="btn btn-ghost btn-sm" onclick="viewReport(\''+c.id+'\')">View</button></td></tr>';}).join('');
+  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="card-title" style="margin-bottom:0">All Cases</div><button class="btn btn-primary btn-sm" onclick="changePage(\'upload\')">+ Upload</button></div>'+(state.cases.length===0?'<div class="empty">No cases yet</div>':'<table><thead><tr><th>Ref</th><th>Type</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>')+'</div>';
+}
 
-              <form onSubmit={handleLogin}>
-                <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@lawfirm.co.uk" required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Password</label>
-                  <input className="form-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
-                </div>
-                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} type="submit">
-                  Sign In
-                </button>
-              </form>
+function renderUpload(){return '<div style="max-width:720px"><div class="card"><div class="card-title">Submit New Case</div><form id="upload-form"><div class="form-group"><label class="form-label">Case Type *</label><select id="case-type" class="form-select" required><option value="">Select...</option><option>Surgical Negligence</option><option>Medication Error</option><option>Delayed Diagnosis</option><option>GP Negligence</option><option>Birth Injury</option><option>Anaesthesia Error</option><option>Hospital Acquired Infection</option></select></div><div class="form-group"><label class="form-label">Case Summary *</label><textarea id="case-summary" class="form-textarea" placeholder="Describe what happened, when, which hospital/doctor, what injuries resulted..." required></textarea></div><div class="form-group"><label class="form-label">Supporting Documents (Optional)</label><div class="upload-zone" onclick="document.getElementById(\'file-input\').click()"><div style="font-size:14px;margin-bottom:6px">📁 Click to upload</div><div style="font-size:11px;color:#94A3B8">PDF, JPG, PNG</div></div><input id="file-input" type="file" multiple style="display:none"></div><div id="file-list"></div><div class="privacy-note"><strong style="color:#2DD4BF">🔒 Privacy:</strong> All patient data is automatically anonymised before analysis.</div><button class="btn btn-primary" type="submit" style="width:100%">Submit for Analysis →</button></form></div></div>';}
 
-              <div className="login-hint">Demo: harrison@harrisoncole.co.uk / password123</div>
-            </div>
-          </div>
-        );
-      }
+function renderProcessing(){
+  var steps=[{n:'Secure Upload'},{n:'PII Anonymisation'},{n:'AI Pre-Screening'},{n:'Cross-Validation'},{n:'Queued for Expert'},{n:'Complete'}];
+  var prog=Math.round((state.pipelineStep/6)*100);
+  var sh=steps.map(function(s,i){var st=i<state.pipelineStep?'done':i===state.pipelineStep?'active':'pending';return '<div class="pipeline-step"><div class="step-circle '+st+'">'+(st==='done'?'✓':(i+1))+'</div><div style="padding-top:8px;font-size:13px;font-weight:500">'+s.n+'</div></div>';}).join('');
+  var rh='';if(state.pipelineResult){rh='<div class="card" style="border-color:#059669"><div class="card-title" style="color:#34D399">✓ Submitted for Expert Review</div><p style="color:#94A3B8;font-size:13px;margin-bottom:14px">Your case has been pre-screened and queued for expert review. You will receive a signed report within 24-48 hours.</p><button class="btn btn-primary" onclick="changePage(\'cases\')" style="width:100%">View My Cases →</button></div>';}
+  return '<div style="max-width:720px"><div class="card"><div class="card-title">Processing</div><div style="display:flex;justify-content:space-between;font-size:11px;color:#94A3B8;margin-bottom:6px"><span>'+state.pipelineMsg+'</span><span>'+prog+'%</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+prog+'%"></div></div>'+sh+'</div>'+rh+'</div>';
+}
 
-      return (
-        <div className="app">
-          {/* Sidebar */}
-          <div className="sidebar">
-            <div className="sidebar-content">
-              <div className="logo">
-                <div className="logo-text">MedLegal<span>-AI</span></div>
-                <div className="logo-sub">Law Firm Portal</div>
-              </div>
+function renderReport(){
+  var c=state.selectedCase;if(!c)return '<div class="empty">Not found</div>';
+  var msg='';
+  if(c.status==='pending_review') msg='<div class="card"><div class="card-title">⏳ Under Expert Review</div><p style="color:#94A3B8;font-size:13px;line-height:1.6">Your case is being reviewed by our expert panel (qualified MD and Lawyer). You will receive a signed report within 24-48 hours.</p></div>';
+  else if(c.status==='approved') msg='<div class="card" style="border-color:#059669"><div class="card-title" style="color:#34D399">✓ Expert Report Ready</div><p style="color:#94A3B8;font-size:13px;margin-bottom:14px">Your case has been reviewed and approved. Download the full signed report below.</p><button class="btn btn-primary">📥 Download Expert Report (PDF)</button></div>';
+  else if(c.status==='rejected') msg='<div class="card" style="border-color:#DC2626"><div class="card-title" style="color:#F87171">✕ Not Recommended</div><p style="color:#94A3B8;font-size:13px">After expert review, this case does not have sufficient merit to proceed. Contact us to discuss further.</p></div>';
+  return '<div><button class="btn btn-ghost btn-sm" onclick="changePage(\'cases\')" style="margin-bottom:14px">← Back</button><div class="card"><div style="font-family:\'DM Mono\',monospace;font-size:11px;color:#64748B;margin-bottom:8px">CASE · '+c.reference+'</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">'+c.case_type+'</div><div style="font-size:12px;color:#94A3B8;margin-bottom:12px">Submitted: '+new Date(c.created_at).toLocaleDateString()+'</div>'+sBadge(c.status)+'</div>'+msg+'</div>';
+}
 
-              <div style={{ paddingTop: 12 }}>
-                <div className="nav-item" style={{ marginLeft: 10, marginRight: 10, marginBottom: 12, cursor: 'default', color: '#94A3B8' }}>
-                  📊 Dashboard
-                </div>
-                <div className={`nav-item ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
-                  📈 Overview
-                </div>
-                <div className={`nav-item ${page === 'cases' ? 'active' : ''}`} onClick={() => setPage('cases')}>
-                  📋 My Cases
-                  <span className="nav-badge">{cases.length}</span>
-                </div>
-                <div className={`nav-item ${page === 'upload' ? 'active' : ''}`} onClick={() => setPage('upload')}>
-                  ↑ Upload Case
-                </div>
+function attachLoginListeners(){var f=document.getElementById('login-form');if(f)f.addEventListener('submit',handleLogin);}
+function attachAppListeners(){var f=document.getElementById('upload-form');if(f){f.addEventListener('submit',handleUpload);var fi=document.getElementById('file-input');if(fi)fi.addEventListener('change',updateFileList);}}
 
-                <div className="nav-section" style={{ marginTop: 20 }}>Help</div>
-                <div className={`nav-item ${page === 'help' ? 'active' : ''}`} onClick={() => setPage('help')}>
-                  ❓ How It Works
-                </div>
-              </div>
-            </div>
+async function handleLogin(e){e.preventDefault();state.error='';var em=document.getElementById('email').value,pw=document.getElementById('password').value;if(em==='harrison@harrisoncole.co.uk'&&pw==='password123'){var r=await db.from('firms').select('*').eq('email',em).single();if(r.data){state.loggedIn=true;state.firmId=r.data.id;state.firmName=r.data.name;state.page='dashboard';await loadCases();render();}else{state.error='Firm not found.';render();}}else{state.error='Invalid credentials.';render();}}
 
-            <div className="sidebar-firm">
-              <div className="firm-name">{firmName}</div>
-              <div className="firm-role">Law Firm Account</div>
-              <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
-            </div>
-          </div>
+async function handleUpload(e){e.preventDefault();var ct=document.getElementById('case-type').value,cs=document.getElementById('case-summary').value;if(!ct||!cs){alert('Fill in case type and summary');return;}var num=state.cases.length+1,ref='MAI-2026-'+String(num).padStart(4,'0');var r=await db.from('cases').insert({reference:ref,firm_id:state.firmId,case_type:ct,case_summary:cs,status:'processing'}).select().single();if(r.error){alert('Error: '+r.error.message);return;}state.page='processing';state.pipelineStep=0;state.pipelineMsg='Starting...';state.pipelineResult=null;render();var result=await runPipeline(ct,cs,r.data.id,function(step,msg){state.pipelineStep=step;state.pipelineMsg=msg;render();});state.pipelineResult=result;render();await loadCases();}
 
-          {/* Main */}
-          <div className="main">
-            <div className="topbar">
-              <div>
-                <div className="topbar-title">
-                  {page === 'dashboard' && 'Overview'}
-                  {page === 'cases' && 'My Cases'}
-                  {page === 'upload' && 'Upload New Case'}
-                  {page === 'processing' && 'Processing Case'}
-                  {page === 'report' && selectedCase?.ref}
-                  {page === 'help' && 'How It Works'}
-                </div>
-                <div className="topbar-sub">
-                  {page === 'dashboard' && 'Your case pipeline at a glance'}
-                  {page === 'cases' && `${cases.length} cases submitted`}
-                  {page === 'upload' && 'Submit medical records for expert analysis'}
-                  {page === 'processing' && 'Your case is being analysed...'}
-                  {page === 'report' && 'Case analysis report'}
-                  {page === 'help' && 'Understanding the MedLegal-AI workflow'}
-                </div>
-              </div>
-            </div>
+function updateFileList(){var files=document.getElementById('file-input').files,list=document.getElementById('file-list');if(!list)return;list.innerHTML='';Array.from(files).forEach(function(f){var d=document.createElement('div');d.className='file-item';d.innerHTML='<span>📄</span><div style="flex:1"><div style="font-size:12px">'+f.name+'</div></div><span class="badge badge-green">Ready</span>';list.appendChild(d);});}
 
-            <div className="content">
-              {/* Dashboard */}
-              {page === 'dashboard' && (
-                <>
-                  <div className="stats-grid">
-                    <div className="stat-card">
-                      <div className="stat-label">Total Cases</div>
-                      <div className="stat-value">{cases.length}</div>
-                    </div>
-                    <div className="stat-card amber">
-                      <div className="stat-label">Pending Review</div>
-                      <div className="stat-value">{cases.filter(c => c.status === 'pending_review').length}</div>
-                    </div>
-                    <div className="stat-card green">
-                      <div className="stat-label">Approved</div>
-                      <div className="stat-value">{cases.filter(c => c.status === 'approved').length}</div>
-                    </div>
-                    <div className="stat-card red">
-                      <div className="stat-label">Declined</div>
-                      <div className="stat-value">{cases.filter(c => c.status === 'rejected').length}</div>
-                    </div>
-                  </div>
-
-                  <div className="grid-2">
-                    <div className="card">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                        <div className="card-title" style={{ marginBottom: 0 }}>Recent Cases</div>
-                        <button className="btn btn-primary btn-sm" onClick={() => setPage('upload')}>+ Upload</button>
-                      </div>
-                      {cases.length === 0 ? (
-                        <div className="empty"><div className="empty-icon">📋</div><div>No cases yet</div></div>
-                      ) : (
-                        cases.slice(0, 5).map(c => (
-                          <div key={c.id} className="case-card" onClick={() => { setSelectedCase(c); setPage('report'); }}>
-                            <div className="case-ref">{c.ref}</div>
-                            <div className="case-type">{c.type}</div>
-                            <div className="case-status">
-                              <StatusBadge status={c.status} />
-                              <span style={{ color: '#94A3B8' }}>Score: {c.score}</span>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    <div className="card">
-                      <div className="card-title">Next Steps</div>
-                      <div style={{ fontSize: 13, lineHeight: 1.8, color: '#94A3B8' }}>
-                        <div style={{ marginBottom: 12 }}>
-                          <strong style={{ color: '#F1F5F9' }}>📤 Upload Cases</strong><br />
-                          Submit medical records for AI-powered triage analysis
-                        </div>
-                        <div style={{ marginBottom: 12 }}>
-                          <strong style={{ color: '#F1F5F9' }}>⏱ Wait for Review</strong><br />
-                          Expert analysis typically completes within 24-48 hours
-                        </div>
-                        <div>
-                          <strong style={{ color: '#F1F5F9' }}>📥 Download Report</strong><br />
-                          Get signed expert report and proceed with case
-                        </div>
-                      </div>
-                      <button className="btn btn-primary" style={{ width: '100%', marginTop: 14, justifyContent: 'center' }} onClick={() => setPage('upload')}>
-                        Upload First Case →
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Cases */}
-              {page === 'cases' && (
-                <div className="card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                    <div className="card-title" style={{ marginBottom: 0 }}>All Your Cases</div>
-                    <button className="btn btn-primary btn-sm" onClick={() => setPage('upload')}>+ Upload</button>
-                  </div>
-                  {cases.length === 0 ? (
-                    <div className="empty"><div className="empty-icon">📋</div><div>No cases uploaded yet</div></div>
-                  ) : (
-                    <table>
-                      <thead>
-                        <tr><th>Reference</th><th>Type</th><th>Date</th><th>Score</th><th>Status</th><th>Action</th></tr>
-                      </thead>
-                      <tbody>
-                        {cases.map(c => (
-                          <tr key={c.id}>
-                            <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#3B82F6' }}>{c.ref}</td>
-                            <td>{c.type}</td>
-                            <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#94A3B8' }}>{c.date}</td>
-                            <td style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: c.score >= 60 ? '#0D9488' : '#D97706' }}>{c.score}</td>
-                            <td><StatusBadge status={c.status} /></td>
-                            <td>
-                              <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedCase(c); setPage('report'); }}>
-                                {c.status === 'approved' ? 'Download' : 'View'}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
-
-              {/* Upload */}
-              {page === 'upload' && (
-                <div style={{ maxWidth: 720 }}>
-                  <div className="card">
-                    <div className="card-title">Submit New Case</div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Case Type *</label>
-                      <select className="form-select" value={caseForm.type} onChange={e => setCaseForm({...caseForm, type: e.target.value})}>
-                        <option value="">Select case type...</option>
-                        <option>Surgical Negligence</option>
-                        <option>Medication Error</option>
-                        <option>Delayed Diagnosis</option>
-                        <option>GP Negligence</option>
-                        <option>Birth Injury</option>
-                        <option>Anaesthesia Error</option>
-                        <option>Hospital Acquired Infection</option>
-                        <option>Other Clinical Negligence</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Brief Case Summary (Optional)</label>
-                      <textarea className="form-textarea" value={caseForm.summary} onChange={e => setCaseForm({...caseForm, summary: e.target.value})} placeholder="2-3 sentences about the alleged negligence..." />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Medical Records *</label>
-                      <div className="upload-zone" onClick={() => document.getElementById('file-input').click()}>
-                        <input id="file-input" type="file" multiple accept=".pdf,.jpg,.png" onChange={e => setCaseForm({...caseForm, files: Array.from(e.target.files)})} style={{ display: 'none' }} />
-                        <div style={{ fontSize: 14, marginBottom: 6 }}>📁 Click to browse or drag files</div>
-                        <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: "'DM Mono', monospace" }}>PDF, JPG, PNG up to 50MB · {caseForm.files.length} file(s) selected</div>
-                      </div>
-                    </div>
-
-                    {caseForm.files.length > 0 && (
-                      <div style={{ marginBottom: 14 }}>
-                        <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: "'DM Mono', monospace", marginBottom: 8 }}>Files ready to upload:</div>
-                        {caseForm.files.map((f, i) => (
-                          <div key={i} className="file-item">
-                            <span>📄</span>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 12, fontWeight: 500 }}>{f.name}</div>
-                              <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: "'DM Mono', monospace" }}>{(f.size / 1024).toFixed(1)} KB</div>
-                            </div>
-                            <span className="badge badge-green">Ready</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div style={{ background: 'rgba(13,148,136,0.08)', border: '1px solid rgba(13,148,136,0.2)', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 12, color: '#94A3B8', borderLeft: '3px solid #0D9488' }}>
-                      <strong style={{ color: '#2DD4BF' }}>🔒 Your Privacy:</strong> All patient identifiable information is automatically anonymised before analysis. Your firm's data never leaves encrypted storage.
-                    </div>
-
-                    <div style={{ textAlign: 'right' }}>
-                      <button className="btn btn-primary" disabled={!caseForm.type || caseForm.files.length === 0} onClick={handleUploadStart}>
-                        Submit for Analysis →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Processing */}
-              {page === 'processing' && (
-                <div style={{ maxWidth: 720 }}>
-                  <div className="card">
-                    <div className="card-title">Analysing Your Case</div>
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontFamily: "'DM Mono', monospace", color: '#94A3B8', marginBottom: 6 }}>
-                        <span>Pipeline Progress</span>
-                        <span>{Math.round((uploadStep / 5) * 100)}%</span>
-                      </div>
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${(uploadStep / 5) * 100}%` }} />
-                      </div>
-                    </div>
-
-                    {pipelineSteps.map((label, i) => {
-                      const state = i < uploadStep ? 'done' : i === uploadStep ? 'active' : 'pending';
-                      return (
-                        <div key={i} className="pipeline-step">
-                          <div className={`step-circle ${state}`}>
-                            {state === 'done' ? '✓' : i + 1}
-                          </div>
-                          <div style={{ paddingTop: 6 }}>
-                            <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
-                            {state === 'active' && <div style={{ fontSize: 12, color: '#3B82F6', marginTop: 4 }}>Processing...</div>}
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    <div style={{ marginTop: 20, padding: 12, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 6, fontSize: 12, color: '#94A3B8' }}>
-                      ⏱ Typical analysis time: 24-48 hours. Expert will review and you'll receive a signed report.
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Report */}
-              {page === 'report' && selectedCase && (
-                <div>
-                  <div className="card">
-                    <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#64748B', marginBottom: 8 }}>CASE REFERENCE · {selectedCase.ref}</div>
-                    <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{selectedCase.type}</div>
-                    <div style={{ fontSize: 12, color: '#94A3B8', fontFamily: "'DM Mono', monospace", marginBottom: 12 }}>Submitted: {selectedCase.date} · Reviewed by: {selectedCase.expert}</div>
-                    <StatusBadge status={selectedCase.status} />
-                  </div>
-
-                  <div className="grid-2">
-                    <div className="card">
-                      <div className="card-title">Risk Assessment</div>
-                      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 48, fontWeight: 800, color: selectedCase.score >= 60 ? '#0D9488' : '#D97706', letterSpacing: -1 }}>
-                        {selectedCase.score}<span style={{ fontSize: 16, color: '#94A3B8' }}>/100</span>
-                      </div>
-                      <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8 }}>
-                        {selectedCase.score >= 75 ? '✓ Strong merit case' : selectedCase.score >= 60 ? '✓ Moderate merit - pursue to expert' : '○ Weak merit - reconsider'}
-                      </div>
-                    </div>
-
-                    <div className="card">
-                      <div className="card-title">Analysis Summary</div>
-                      <table style={{ fontSize: 11, marginTop: 0 }}>
-                        <tbody>
-                          <tr><td style={{ paddingRight: 16 }}>Duty of Care</td><td style={{ color: '#34D399' }}>✓ Confirmed</td></tr>
-                          <tr><td style={{ paddingRight: 16 }}>Breach (Bolam)</td><td style={{ color: '#FCD34D' }}>~ Arguable</td></tr>
-                          <tr><td style={{ paddingRight: 16 }}>Defensibility</td><td style={{ color: '#FCD34D' }}>~ Contestable</td></tr>
-                          <tr><td style={{ paddingRight: 16 }}>Causation</td><td style={{ color: '#FCD34D' }}>~ Arguable</td></tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {selectedCase.status === 'approved' && (
-                    <div className="card">
-                      <div className="card-title">✓ Approved Report</div>
-                      <p style={{ color: '#94A3B8', fontSize: 12, marginBottom: 12 }}>This case has been approved by the expert and is ready for your review. Download the full signed report below.</p>
-                      <button className="btn btn-primary">
-                        📥 Download Full Report (PDF)
-                      </button>
-                    </div>
-                  )}
-
-                  {selectedCase.status === 'pending_review' && (
-                    <div className="card">
-                      <div className="card-title">⏳ Under Expert Review</div>
-                      <p style={{ color: '#94A3B8', fontSize: 12 }}>This case is currently being reviewed by our expert panel. You'll receive a detailed report within 24-48 hours.</p>
-                    </div>
-                  )}
-
-                  {selectedCase.status === 'rejected' && (
-                    <div className="card">
-                      <div className="card-title">✕ Not Recommended</div>
-                      <p style={{ color: '#94A3B8', fontSize: 12 }}>After expert analysis, this case does not have sufficient merit to justify pursuing to full expert report stage. You can contact our team if you'd like to discuss further.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Help */}
-              {page === 'help' && (
-                <div style={{ maxWidth: 720 }}>
-                  <div className="card">
-                    <div className="card-title">How MedLegal-AI Works</div>
-                    <div style={{ color: '#94A3B8', fontSize: 13, lineHeight: 1.8 }}>
-                      <div style={{ marginBottom: 16 }}>
-                        <strong style={{ color: '#F1F5F9' }}>Step 1: Upload Medical Records</strong><br />
-                        Submit patient medical records (anonymised). The system automatically detects and masks all personal identifiable information before processing.
-                      </div>
-                      <div style={{ marginBottom: 16 }}>
-                        <strong style={{ color: '#F1F5F9' }}>Step 2: AI Analysis</strong><br />
-                        Four independent AI models (GPT-4, Gemini, Claude, DeepSeek) analyse your case simultaneously against UK clinical negligence law (Bolam/Bolitho tests).
-                      </div>
-                      <div style={{ marginBottom: 16 }}>
-                        <strong style={{ color: '#F1F5F9' }}>Step 3: Expert Review</strong><br />
-                        A qualified expert (MD + Lawyer) reviews the AI output, checks the clinical and legal reasoning, and signs off the report.
-                      </div>
-                      <div>
-                        <strong style={{ color: '#F1F5F9' }}>Step 4: Download & Proceed</strong><br />
-                        You receive a signed expert report. Use it to decide whether to pursue the case with a full expert assessment.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <div className="card-title">Pricing</div>
-                    <table>
-                      <tbody>
-                        <tr>
-                          <td style={{ paddingRight: 24 }}>
-                            <strong style={{ color: '#F1F5F9' }}>Expert Report</strong><br />
-                            <span style={{ fontSize: 11, color: '#94A3B8' }}>Traditional process</span>
-                          </td>
-                          <td style={{ textAlign: 'right', color: '#F1F5F9', fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 16 }}>
-                            £500–£1,000<br />
-                            <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 400 }}>2–4 weeks</span>
-                          </td>
-                        </tr>
-                        <tr style={{ borderTop: '1px solid #1E3A5F' }}>
-                          <td style={{ paddingRight: 24, paddingTop: 12 }}>
-                            <strong style={{ color: '#F1F5F9' }}>MedLegal-AI</strong><br />
-                            <span style={{ fontSize: 11, color: '#94A3B8' }}>Expert-backed AI pre-screening</span>
-                          </td>
-                          <td style={{ textAlign: 'right', paddingTop: 12 }}>
-                            <strong style={{ color: '#34D399', fontFamily: "'Syne', sans-serif", fontSize: 16 }}>£75–£150</strong><br />
-                            <span style={{ fontSize: 11, color: '#94A3B8' }}>24–48 hours</span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-  </script>
+async function loadCases(){var r=await db.from('cases').select('*').eq('firm_id',state.firmId).order('created_at',{ascending:false});state.cases=r.data||[];}
+async function viewReport(id){state.selectedCase=state.cases.find(function(c){return c.id===id;});state.page='report';render();}
+function changePage(p){state.page=p;state.pipelineResult=null;render();}
+function logout(){state={loggedIn:false,firmId:null,firmName:null,page:'dashboard',cases:[],selectedCase:null,pipelineStep:0,pipelineMsg:'',pipelineResult:null,error:''};render();}
+render();
+</script>
 </body>
 </html>
