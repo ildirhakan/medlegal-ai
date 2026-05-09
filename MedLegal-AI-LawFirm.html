@@ -63,7 +63,7 @@ td{padding:12px 0;border-bottom:1px solid rgba(30,58,95,.5);font-size:13px}
 <div id="app"></div>
 <script>
 var SUPABASE_URL='https://nhotxxkehumweboxqkka.supabase.co',SUPABASE_KEY='sb_publishable_3UKw258JCeGIsInKmz291w_Fc658oH3';
-var AI_KEYS={openai:'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',gemini:'AIzaSyDxQJSU2LfIJ8PLxk42GW54Z6t8x--5LQI',deepseek:'sk-c5de9b4e4f214bbc8b3a2251473551c1'};
+var AI_KEYS={openai:'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',gemini:'AIzaSyApGL1uAxj9Ob-D52GYOBvcEBVc9wD4Cl8',deepseek:'sk-c5de9b4e4f214bbc8b3a2251473551c1'};
 var db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 function anonymisePII(t){if(!t)return t;return t.replace(/\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b/g,'[NHS-REDACTED]').replace(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/gi,'[POSTCODE-REDACTED]').replace(/\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b/g,'[DOB-REDACTED]').replace(/\b[\w.-]+@[\w.-]+\.\w{2,}\b/g,'[EMAIL-REDACTED]').replace(/\b(?:0|\+44)\s*\d[\d\s]{8,12}\b/g,'[PHONE-REDACTED]');}
@@ -79,9 +79,9 @@ function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 async function runPipeline(ct,cs,caseId,onStep){
   var prompt=buildPrompt(ct,cs),results={};
   onStep(1,'PII Anonymisation complete');await sleep(500);
-  onStep(2,'AI pre-screening...');results.gpt4=await callGPT4(prompt);
-  onStep(3,'Cross-validation...');results.gemini=await callGemini(prompt);
-  onStep(4,'Final check...');results.deepseek=await callDeepSeek(prompt);
+  onStep(2,'Gemini analysing...');results.gemini=await callGemini(prompt);
+  onStep(3,'Cross-validating...');await sleep(500);
+  onStep(4,'DeepSeek analysing...');results.deepseek=await callDeepSeek(prompt);
   onStep(5,'Preparing for expert...');await sleep(300);
   var valid=[];for(var k in results){if(results[k])valid.push([k,results[k]]);}
   var avg=0,con=0;
