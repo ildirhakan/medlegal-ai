@@ -63,31 +63,51 @@ td{padding:12px 0;border-bottom:1px solid rgba(30,58,95,.5);font-size:13px}
 <body>
 <div id="app"></div>
 <script>
+// ── CONFIG ──────────────────────────────────────────────────────────
+// Public (publishable) Supabase key only. AI keys are NOT here anymore —
+// they live securely in the Supabase Edge Function (server-side).
 var SUPABASE_URL='https://nhotxxkehumweboxqkka.supabase.co',SUPABASE_KEY='sb_publishable_3UKw258JCeGIsInKmz291w_Fc658oH3';
-var AI_KEYS={openai:'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',gemini:'AIzaSyCIgMWJnzW3rSxhZmaYOMoreeNuvbcSUhI',deepseek:'sk-c5de9b4e4f214bbc8b3a2251473551c1'};
+var ANALYZE_FN_URL=SUPABASE_URL+'/functions/v1/analyze-case';
 var db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
-function anonymisePII(t){if(!t)return t;return t.replace(/\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b/g,'[NHS-REDACTED]').replace(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/gi,'[POSTCODE-REDACTED]').replace(/\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b/g,'[DOB-REDACTED]').replace(/\b[\w.-]+@[\w.-]+\.\w{2,}\b/g,'[EMAIL-REDACTED]').replace(/\b(?:0|\+44)\s*\d[\d\s]{8,12}\b/g,'[PHONE-REDACTED]');}
-
-function buildPrompt(ct,cs){return 'You are a UK clinical negligence legal analyst. Analyse this case under UK law.\n\nCASE TYPE: '+ct+'\nCASE SUMMARY: '+anonymisePII(cs)+'\n\nApply these legal tests:\n1. DUTY OF CARE: Confirmed / Arguable / Not Established\n2. BREACH (BOLAM TEST): Clear Breach / Arguable Breach / No Breach\n3. BOLITHO DEFENSIBILITY: Not Defensible / Partially Defensible / Fully Defensible\n4. CAUSATION: Established / Arguable / Not Established\n5. OVERALL RISK SCORE: 0-100\n6. RECOMMENDATION: "Proceed to Expert Report" / "Borderline - Consider Further" / "Do Not Pursue"\n7. DETAILED REASONING: 4-6 sentence analysis.\n\nRespond ONLY in JSON:\n{"duty_of_care":"string","breach_bolam":"string","bolitho_defensibility":"string","causation":"string","risk_score":0,"recommendation":"string","reasoning":"string"}';}
-
-async function callGPT4(p){try{var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_KEYS.openai},body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'user',content:p}],temperature:.3,max_tokens:1200})});var d=await r.json();if(d.error)throw new Error(d.error.message);return JSON.parse(d.choices[0].message.content.replace(/```json|```/g,'').trim());}catch(e){console.error('GPT4:',e);return null;}}
-async function callGemini(p){try{var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+AI_KEYS.gemini,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p}]}],generationConfig:{temperature:.3,maxOutputTokens:1200}})});var d=await r.json();if(d.error)throw new Error(d.error.message);return JSON.parse(d.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim());}catch(e){console.error('Gemini:',e);return null;}}
-async function callDeepSeek(p){try{var r=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_KEYS.deepseek},body:JSON.stringify({model:'deepseek-chat',messages:[{role:'user',content:p}],temperature:.3,max_tokens:1200})});var d=await r.json();if(d.error)throw new Error(d.error.message);return JSON.parse(d.choices[0].message.content.replace(/```json|```/g,'').trim());}catch(e){console.error('DeepSeek:',e);return null;}}
 
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 
+// ── SECURE AI CALL ──────────────────────────────────────────────────
+// Calls the Supabase Edge Function, which runs GPT-4, Gemini and DeepSeek
+// server-side. No API keys are ever exposed in the browser.
+async function callAnalysis(ct,cs){
+  try{
+    var r=await fetch(ANALYZE_FN_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY},
+      body:JSON.stringify({caseType:ct,caseSummary:cs})
+    });
+    var d=await r.json();
+    if(d.error)throw new Error(d.error);
+    return d; // { results:{...}, avgScore, consistency }
+  }catch(e){console.error('Analysis:',e);return null;}
+}
+
 async function runPipeline(ct,cs,caseId,onStep){
-  var prompt=buildPrompt(ct,cs),results={};
   onStep(1,'PII Anonymisation complete');await sleep(500);
-  onStep(2,'Gemini analysing...');results.gemini=await callGemini(prompt);
+  onStep(2,'Running AI models (secure)...');
+  var analysis=await callAnalysis(ct,cs);
   onStep(3,'Cross-validating...');await sleep(500);
-  onStep(4,'DeepSeek analysing...');results.deepseek=await callDeepSeek(prompt);
+  onStep(4,'Aggregating model outputs...');await sleep(400);
   onStep(5,'Preparing for expert...');await sleep(300);
-  var valid=[];for(var k in results){if(results[k])valid.push([k,results[k]]);}
-  var avg=0,con=0;
-  if(valid.length>0){var sc=valid.map(function(v){return v[1].risk_score;});avg=Math.round(sc.reduce(function(a,b){return a+b;},0)/sc.length);if(sc.length>1){var m=sc.reduce(function(a,b){return a+b;},0)/sc.length;var v2=sc.reduce(function(a,s){return a+Math.pow(s-m,2);},0)/sc.length;con=Math.round(Math.max(0,100-Math.sqrt(v2)*2));}else con=75;}
-  for(var i=0;i<valid.length;i++){var mo=valid[i][0],re=valid[i][1];await db.from('model_results').insert({case_id:caseId,model_name:mo,score:re.risk_score,duty_of_care:re.duty_of_care,breach_bolam:re.breach_bolam,bolitho_defensibility:re.bolitho_defensibility,causation:re.causation,reasoning:re.reasoning||'',recommendation:re.recommendation||''});}
+
+  var results=(analysis&&analysis.results)?analysis.results:{};
+  var avg=(analysis&&typeof analysis.avgScore==='number')?analysis.avgScore:0;
+  var con=(analysis&&typeof analysis.consistency==='number')?analysis.consistency:0;
+
+  // Persist individual model results
+  var keys=Object.keys(results);
+  for(var i=0;i<keys.length;i++){
+    var mo=keys[i],re=results[mo];
+    if(!re)continue;
+    await db.from('model_results').insert({case_id:caseId,model_name:mo,score:re.risk_score,duty_of_care:re.duty_of_care,breach_bolam:re.breach_bolam,bolitho_defensibility:re.bolitho_defensibility,causation:re.causation,reasoning:re.reasoning||'',recommendation:re.recommendation||''});
+  }
+
   var rec=avg>=65?'Proceed to Expert Report':avg>=40?'Borderline - Consider Further':'Do Not Pursue';
   await db.from('cases').update({risk_score:avg,consistency_score:con,status:'pending_review',expert_notes:rec,updated_at:new Date().toISOString()}).eq('id',caseId);
   onStep(6,'Complete');return{avgScore:avg,consistency:con,recommendation:rec};
@@ -98,7 +118,7 @@ var state={loggedIn:false,firmId:null,firmName:null,page:'dashboard',cases:[],se
 function render(){var app=document.getElementById('app');if(!state.loggedIn){app.innerHTML=renderLogin();setTimeout(attachLoginListeners,0);}else{app.innerHTML=renderApp();setTimeout(attachAppListeners,0);}}
 function sBadge(s){var m={uploaded:['badge-blue','● Uploaded'],processing:['badge-blue','⟳ Processing'],pending_review:['badge-amber','● Under Review'],approved:['badge-green','✓ Report Ready'],rejected:['badge-red','✕ Not Recommended']};var a=m[s]||['badge-blue',s];return '<span class="badge '+a[0]+'">'+a[1]+'</span>';}
 
-function renderLogin(){return '<div class="login-screen"><div class="login-card"><div class="login-title">MedLegal<span>-AI</span></div><div class="login-sub">Law Firm Portal</div>'+(state.error?'<div class="login-error">'+state.error+'</div>':'')+'<form id="login-form"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="email" type="email" placeholder="your@lawfirm.co.uk" required></div><div class="form-group"><label class="form-label">Password</label><input class="form-input" id="password" type="password" placeholder="••••••••" required></div><button class="btn btn-primary" type="submit" style="width:100%">Sign In</button></form><div class="login-hint">Demo: harrison@harrisoncole.co.uk / password123</div></div></div>';}
+function renderLogin(){return '<div class="login-screen"><div class="login-card"><div class="login-title">MedLegal<span>-AI</span></div><div class="login-sub">Law Firm Portal</div>'+(state.error?'<div class="login-error">'+state.error+'</div>':'')+'<form id="login-form"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="email" type="email" placeholder="your@lawfirm.co.uk" required></div><div class="form-group"><label class="form-label">Password</label><input class="form-input" id="password" type="password" placeholder="••••••••" required></div><button class="btn btn-primary" type="submit" style="width:100%">Sign In</button></form></div></div>';}
 
 function renderApp(){
   return '<div class="app"><div class="sidebar"><div class="logo"><div class="logo-text">MedLegal<span>-AI</span></div><div class="logo-sub">Law Firm Portal</div></div><div class="sidebar-content"><div class="nav-section">Main</div><div class="nav-item '+(state.page==='dashboard'?'active':'')+'" onclick="changePage(\'dashboard\')">📈 Overview</div><div class="nav-item '+(state.page==='cases'?'active':'')+'" onclick="changePage(\'cases\')">📋 My Cases <span class="nav-badge">'+state.cases.length+'</span></div><div class="nav-item '+(state.page==='upload'?'active':'')+'" onclick="changePage(\'upload\')">↑ Upload Case</div></div><div class="sidebar-user"><div class="user-name">'+state.firmName+'</div><div class="user-role">Law Firm Account</div><button class="btn btn-ghost btn-sm" onclick="logout()" style="width:100%;margin-top:8px">Sign Out</button></div></div><div class="main"><div class="topbar"><div class="topbar-title">'+(state.page==='dashboard'?'Overview':state.page==='cases'?'My Cases':state.page==='upload'?'Upload New Case':state.page==='processing'?'Processing':state.page==='report'?(state.selectedCase?state.selectedCase.reference:''):'')+'</div></div><div class="content">'+(state.page==='dashboard'?renderDashboard():'')+(state.page==='cases'?renderCases():'')+(state.page==='upload'?renderUpload():'')+(state.page==='processing'?renderProcessing():'')+(state.page==='report'?renderReport():'')+'</div></div></div>';
@@ -137,7 +157,18 @@ function renderReport(){
 function attachLoginListeners(){var f=document.getElementById('login-form');if(f)f.addEventListener('submit',handleLogin);}
 function attachAppListeners(){var f=document.getElementById('upload-form');if(f){f.addEventListener('submit',handleUpload);var fi=document.getElementById('file-input');if(fi)fi.addEventListener('change',updateFileList);}}
 
-async function handleLogin(e){e.preventDefault();state.error='';var em=document.getElementById('email').value,pw=document.getElementById('password').value;if(em==='harrison@harrisoncole.co.uk'&&pw==='password123'){var r=await db.from('firms').select('*').eq('email',em).single();if(r.data){state.loggedIn=true;state.firmId=r.data.id;state.firmName=r.data.name;state.page='dashboard';await loadCases();render();}else{state.error='Firm not found.';render();}}else{state.error='Invalid credentials.';render();}}
+async function handleLogin(e){
+  e.preventDefault();state.error='';
+  var em=document.getElementById('email').value,pw=document.getElementById('password').value;
+  // Authenticate against Supabase (firm record must exist with matching credentials)
+  var r=await db.from('firms').select('*').eq('email',em).single();
+  if(r.data&&r.data.password===pw){
+    state.loggedIn=true;state.firmId=r.data.id;state.firmName=r.data.name;state.page='dashboard';
+    await loadCases();render();
+  }else{
+    state.error='Invalid credentials.';render();
+  }
+}
 
 async function handleUpload(e){e.preventDefault();var ct=document.getElementById('case-type').value,cs=document.getElementById('case-summary').value;if(!ct||!cs){alert('Fill in case type and summary');return;}var num=state.cases.length+1,ref='MAI-2026-'+String(num).padStart(4,'0');var r=await db.from('cases').insert({reference:ref,firm_id:state.firmId,case_type:ct,case_summary:cs,status:'processing'}).select().single();if(r.error){alert('Error: '+r.error.message);return;}state.page='processing';state.pipelineStep=0;state.pipelineMsg='Starting...';state.pipelineResult=null;render();var result=await runPipeline(ct,cs,r.data.id,function(step,msg){state.pipelineStep=step;state.pipelineMsg=msg;render();});state.pipelineResult=result;render();await loadCases();}
 
@@ -150,33 +181,28 @@ function changePage(p){state.page=p;state.pipelineResult=null;render();}
 async function downloadReport(caseId){
   var c=state.cases.find(function(x){return x.id===caseId;});
   if(!c)return alert('Case not found');
-  
+
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF('p','mm','a4');
   var w=210,margin=20,y=20,lw=w-2*margin;
-  
-  // Colors
+
   var blue=[43,108,176],dark=[13,27,46],teal=[13,148,136];
-  
-  // Header bar
+
   doc.setFillColor(dark[0],dark[1],dark[2]);
   doc.rect(0,0,w,40,'F');
   doc.setFillColor(blue[0],blue[1],blue[2]);
   doc.rect(0,38,w,2,'F');
-  
-  // Logo
+
   doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(241,245,249);
   doc.text('MedLegal-AI',margin,28);
   doc.setFontSize(8);doc.setTextColor(148,163,184);
   doc.text('CLINICAL NEGLIGENCE TRIAGE REPORT',margin+55,28);
-  
-  // Confidential badge
+
   doc.setFontSize(7);doc.setTextColor(220,38,38);
   doc.text('CONFIDENTIAL',w-margin-25,28);
-  
+
   y=50;
-  
-  // Report Info Box
+
   doc.setFillColor(242,244,247);doc.rect(margin,y,lw,28,'F');
   doc.setDrawColor(200,200,200);doc.rect(margin,y,lw,28,'S');
   doc.setFontSize(9);doc.setTextColor(100,116,139);doc.setFont('helvetica','normal');
@@ -184,31 +210,29 @@ async function downloadReport(caseId){
   doc.setFont('helvetica','bold');doc.setTextColor(30,41,59);
   doc.text(c.reference,margin+40,y+7);doc.text(c.case_type,margin+40,y+14);doc.text(new Date(c.created_at).toLocaleDateString('en-GB'),margin+40,y+21);
   doc.setTextColor(5,150,105);doc.text('APPROVED',margin+105,y+7);
-  
+
   y+=36;
-  
-  // Section: Expert Assessment
+
   doc.setFillColor(blue[0],blue[1],blue[2]);doc.rect(margin,y,lw,7,'F');
   doc.setFontSize(10);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
   doc.text('EXPERT ASSESSMENT',margin+4,y+5);
   y+=12;
-  
+
   doc.setFontSize(10);doc.setTextColor(30,41,59);doc.setFont('helvetica','normal');
   var expertText=c.expert_notes||'This case has been reviewed and approved by our expert panel.';
   var lines=doc.splitTextToSize(expertText,lw-8);
   doc.text(lines,margin+4,y);
   y+=lines.length*5+8;
-  
-  // Section: Recommendation
+
   doc.setFillColor(blue[0],blue[1],blue[2]);doc.rect(margin,y,lw,7,'F');
   doc.setFontSize(10);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
   doc.text('RECOMMENDATION',margin+4,y+5);
   y+=12;
-  
+
   var rec=c.expert_notes||'Proceed to Expert Report';
   if(rec.toLowerCase().indexOf('proceed')>=0||rec.toLowerCase().indexOf('approved')>=0){
     doc.setTextColor(5,150,105);doc.setFont('helvetica','bold');doc.setFontSize(12);
-    doc.text('✓ RECOMMENDED TO PROCEED',margin+4,y);
+    doc.text('RECOMMENDED TO PROCEED',margin+4,y);
     y+=8;doc.setFontSize(9);doc.setTextColor(100,116,139);doc.setFont('helvetica','normal');
     doc.text('Based on expert analysis, this case has sufficient merit to proceed to a full expert assessment.',margin+4,y);
   } else {
@@ -216,22 +240,21 @@ async function downloadReport(caseId){
     doc.text('BORDERLINE - FURTHER CONSIDERATION ADVISED',margin+4,y);
   }
   y+=14;
-  
-  // Section: Methodology
+
   doc.setFillColor(blue[0],blue[1],blue[2]);doc.rect(margin,y,lw,7,'F');
   doc.setFontSize(10);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
   doc.text('METHODOLOGY',margin+4,y+5);
   y+=12;
-  
+
   doc.setFontSize(9);doc.setTextColor(100,116,139);doc.setFont('helvetica','normal');
   var methLines=[
     'This report was generated using the MedLegal-AI clinical negligence triage platform.',
     'The case was assessed against the following UK legal frameworks:',
     '',
-    '  • Bolam Test - Whether the treatment met the standard of a responsible body of medical opinion',
-    '  • Bolitho Principle - Whether the medical opinion relied upon is logically defensible',
-    '  • Duty of Care - Establishment of doctor-patient relationship',
-    '  • Causation - Application of the "but-for" test',
+    '  - Bolam Test - Whether the treatment met the standard of a responsible body of medical opinion',
+    '  - Bolitho Principle - Whether the medical opinion relied upon is logically defensible',
+    '  - Duty of Care - Establishment of doctor-patient relationship',
+    '  - Causation - Application of the "but-for" test',
     '',
     'Multiple AI models independently analysed the case, and results were cross-validated',
     'for consistency. An expert (qualified MD and Lawyer) reviewed all outputs before',
@@ -239,20 +262,18 @@ async function downloadReport(caseId){
   ];
   methLines.forEach(function(line){doc.text(line,margin+4,y);y+=5;});
   y+=6;
-  
-  // Expert Signature
+
   doc.setDrawColor(200,200,200);doc.line(margin,y,margin+lw,y);
   y+=10;
   doc.setFontSize(10);doc.setTextColor(30,41,59);doc.setFont('helvetica','bold');
-  doc.text('Dr. H. Yilmaz',margin+4,y);
+  doc.text('Dr. H. Ildir',margin+4,y);
   y+=5;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(100,116,139);
-  doc.text('MD, LLB (Bar-Registered Lawyer), Forensic Scientist',margin+4,y);
+  doc.text('MD, LLB, MSc Forensic Science',margin+4,y);
   y+=5;doc.text('MedLegal-AI Expert Panel',margin+4,y);
   y+=5;doc.text('Date: '+new Date().toLocaleDateString('en-GB'),margin+4,y);
-  
+
   y+=14;
-  
-  // Disclaimer
+
   doc.setDrawColor(200,200,200);doc.line(margin,y,margin+lw,y);y+=6;
   doc.setFontSize(7);doc.setTextColor(148,163,184);
   var disc=[
@@ -261,16 +282,15 @@ async function downloadReport(caseId){
     'an independent medical expert is required before commencing formal proceedings. MedLegal-AI operates as a',
     'decision-support tool and all outputs are subject to expert human review and sign-off.',
     '',
-    '© '+new Date().getFullYear()+' MedLegal-AI. All rights reserved. This document is confidential and intended solely',
+    '(c) '+new Date().getFullYear()+' MedLegal-AI. All rights reserved. This document is confidential and intended solely',
     'for the use of the instructing law firm.'
   ];
   disc.forEach(function(line){doc.text(line,margin+4,y);y+=4;});
-  
-  // Footer bar
+
   doc.setFillColor(dark[0],dark[1],dark[2]);doc.rect(0,287,w,10,'F');
   doc.setFontSize(7);doc.setTextColor(148,163,184);
   doc.text('MedLegal-AI | Clinical Negligence Triage Platform | '+c.reference,margin,293);
-  
+
   doc.save('MedLegal-AI-Report-'+c.reference+'.pdf');
 }
 function logout(){state={loggedIn:false,firmId:null,firmName:null,page:'dashboard',cases:[],selectedCase:null,pipelineStep:0,pipelineMsg:'',pipelineResult:null,error:''};render();}
