@@ -56,18 +56,58 @@ td{padding:12px 0;border-bottom:1px solid rgba(30,58,95,.5);font-size:13px}
 .form-textarea:focus{outline:none;border-color:#3B82F6}
 .review-card{background:#0D1B2E;border:1px solid #1E3A5F;border-radius:8px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all .15s}
 .review-card:hover{border-color:#2B6CB0;background:#142236}
+/* LOGIN GATE */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative}
+.login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(43,108,176,.12) 0%,transparent 60%)}
+.login-card{background:#142236;border:1px solid #1E3A5F;border-radius:14px;padding:40px;width:400px;position:relative;z-index:1}
+.login-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;text-align:center}.login-title span{color:#3B82F6}
+.login-sub{font-size:11px;color:#64748B;margin-bottom:28px;text-align:center;font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase}
+.login-error{background:rgba(220,38,38,.12);color:#F87171;padding:12px;border-radius:6px;margin-bottom:16px;font-size:12px;text-align:center}
+.form-label{font-size:11px;color:#94A3B8;text-transform:uppercase;display:block;margin-bottom:6px;font-family:'DM Mono',monospace}
+.form-input{width:100%;background:#0D1B2E;border:1px solid #1E3A5F;padding:10px 12px;color:#F1F5F9;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:16px}
+.form-input:focus{outline:none;border-color:#3B82F6}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
+// ── EXPERT ACCESS PASSWORD ──────────────────────────────────────────
+// Change this value to set your own Expert Dashboard password.
+var EXPERT_PASSWORD='ExpertAccess2026';
+
 var db=window.supabase.createClient('https://nhotxxkehumweboxqkka.supabase.co','sb_publishable_3UKw258JCeGIsInKmz291w_Fc658oH3');
 
-var state={page:'dashboard',cases:[],firms:{},selectedCase:null,modelResults:[],loading:true};
+var state={authed:false,loginError:'',page:'dashboard',cases:[],firms:{},selectedCase:null,modelResults:[],loading:true};
 
 function testColor(v){if(!v)return'test-amber';var l=v.toLowerCase();if(l.indexOf('confirmed')>=0||l.indexOf('established')>=0||l.indexOf('clear breach')>=0||l.indexOf('not defensible')>=0)return'test-green';if(l.indexOf('no breach')>=0||l.indexOf('not established')>=0||l.indexOf('fully defensible')>=0)return'test-red';return'test-amber';}
 function recClass(r){if(!r)return'rec-borderline';var l=r.toLowerCase();if(l.indexOf('proceed')>=0)return'rec-proceed';if(l.indexOf('not pursue')>=0||l.indexOf('do not')>=0)return'rec-decline';return'rec-borderline';}
 function sBadge(s){var m={uploaded:['badge-blue','● Uploaded'],processing:['badge-blue','⟳ Processing'],pending_review:['badge-amber','● Pending Review'],approved:['badge-green','✓ Approved'],rejected:['badge-red','✕ Rejected']};var a=m[s]||['badge-blue',s];return'<span class="badge '+a[0]+'">'+a[1]+'</span>';}
+
+// ── LOGIN GATE ──────────────────────────────────────────────────────
+function renderLogin(){
+  var app=document.getElementById('app');
+  app.innerHTML='<div class="login-screen"><div class="login-card">'+
+    '<div class="login-title">MedLegal<span>-AI</span></div>'+
+    '<div class="login-sub">Expert Dashboard · Restricted Access</div>'+
+    (state.loginError?'<div class="login-error">'+state.loginError+'</div>':'')+
+    '<label class="form-label">Access Password</label>'+
+    '<input class="form-input" id="expert-pass" type="password" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')tryLogin()">'+
+    '<button class="btn btn-primary" style="width:100%" onclick="tryLogin()">Enter Dashboard</button>'+
+    '</div></div>';
+  setTimeout(function(){var i=document.getElementById('expert-pass');if(i)i.focus();},0);
+}
+
+function tryLogin(){
+  var v=document.getElementById('expert-pass')?document.getElementById('expert-pass').value:'';
+  if(v===EXPERT_PASSWORD){
+    state.authed=true;state.loginError='';
+    render();
+    init();
+  }else{
+    state.loginError='Incorrect password.';
+    renderLogin();
+  }
+}
 
 async function init(){
   var fr=await db.from('firms').select('*');
@@ -83,6 +123,7 @@ async function loadCases(){
 }
 
 function render(){
+  if(!state.authed){renderLogin();return;}
   var app=document.getElementById('app');
   var pending=state.cases.filter(function(c){return c.status==='pending_review';}).length;
   var pages={dashboard:'Dashboard',cases:'All Cases',review:'Expert Review',report:state.selectedCase?state.selectedCase.reference:'Report'};
@@ -93,7 +134,7 @@ function render(){
     '<div class="nav-item '+(state.page==='cases'?'active':'')+'" onclick="changePage(\'cases\')">📋 All Cases</div>'+
     '<div class="nav-section">Review</div>'+
     '<div class="nav-item '+(state.page==='review'?'active':'')+'" onclick="changePage(\'review\')">⚖ Expert Review'+(pending>0?' <span class="nav-badge">'+pending+'</span>':'')+'</div></div>'+
-    '<div class="sidebar-user"><div class="user-avatar">HY</div><div class="user-name">Dr. H. Yılmaz</div><div class="user-role">MD · LLB · Forensic Sci.</div></div></div>'+
+    '<div class="sidebar-user"><div class="user-avatar">HI</div><div class="user-name">Dr. H. Ildir</div><div class="user-role">MD · LLB · Forensic Sci.</div></div></div>'+
     '<div class="main"><div class="topbar"><div><div class="topbar-title">'+(pages[state.page]||'')+'</div>'+
     '<div class="topbar-sub">'+(state.page==='review'?pending+' cases awaiting review':'')+'</div></div>'+
     (state.page==='report'?'<button class="btn btn-ghost btn-sm" onclick="changePage(\'review\')">← Back</button>':'')+'</div>'+
@@ -162,13 +203,11 @@ function renderReview(){
 function renderReport(){
   var c=state.selectedCase;if(!c)return'<div class="empty">Case not found</div>';
 
-  // Header
   var html='<div class="card"><div style="font-family:\'DM Mono\',monospace;font-size:11px;color:#64748B;margin-bottom:8px">EXPERT REVIEW · '+c.reference+' · CONFIDENTIAL</div>'+
     '<div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">'+c.case_type+'</div>'+
     '<div style="font-size:12px;color:#94A3B8;margin-bottom:4px">Firm: <strong style="color:#F1F5F9">'+(state.firms[c.firm_id]||'Unknown')+'</strong> · '+new Date(c.created_at).toLocaleDateString()+'</div>'+
     sBadge(c.status)+'</div>';
 
-  // Scores
   html+='<div class="grid-2"><div class="card"><div class="card-title">Risk / Success Score</div>'+
     '<div style="font-family:\'Syne\',sans-serif;font-size:48px;font-weight:800;color:'+((c.risk_score||0)>=60?'#0D9488':'#D97706')+';letter-spacing:-1px">'+(c.risk_score||'—')+'<span style="font-size:16px;color:#94A3B8">/100</span></div>'+
     (c.expert_notes?'<div style="font-size:12px;color:#94A3B8;margin-top:6px">'+c.expert_notes+'</div>':'')+'</div>'+
@@ -176,12 +215,10 @@ function renderReport(){
     '<div style="font-family:\'Syne\',sans-serif;font-size:48px;font-weight:800;color:#3B82F6;letter-spacing:-1px">'+(c.consistency_score?c.consistency_score+'%':'—')+'</div>'+
     '<div style="font-size:12px;color:#94A3B8;margin-top:6px">Agreement between '+state.modelResults.length+' AI models</div></div></div>';
 
-  // Case Summary
   if(c.case_summary){
     html+='<div class="card"><div class="card-title">Case Summary (Anonymised)</div><p style="color:#94A3B8;font-size:13px;line-height:1.6">'+c.case_summary+'</p></div>';
   }
 
-  // Model Results
   if(state.modelResults.length>0){
     var modelHtml=state.modelResults.map(function(r){
       return'<div class="model-card">'+
@@ -199,7 +236,6 @@ function renderReport(){
       '<p style="font-size:11px;color:#64748B;margin-bottom:14px">Each AI model independently assessed the case under UK clinical negligence law (Bolam/Bolitho framework)</p>'+modelHtml+'</div>';
   }
 
-  // Expert Review Panel
   if(c.status==='pending_review'){
     html+='<div class="card" style="border-color:#D97706"><div class="card-title" style="color:#FCD34D">⚖ Expert Review Panel</div>'+
       '<div style="margin-bottom:14px"><label style="font-size:11px;color:#94A3B8;display:block;margin-bottom:6px;font-family:\'DM Mono\',monospace">EXPERT NOTES</label>'+
@@ -245,8 +281,8 @@ async function rejectCase(id){
 
 function changePage(p){state.page=p;render();}
 
-render();
-init();
+// Start at the login gate — no data loads until correct password entered
+renderLogin();
 </script>
 </body>
 </html>
